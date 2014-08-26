@@ -9,6 +9,7 @@
 
 #include "RecoBase/Cluster.h"
 #include "RecoBase/Hit.h"
+#include "art/Persistency/Common/Ptr.h"
 
 namespace lar_pandora {
 
