@@ -1,3 +1,6 @@
+IF(ALT_CMAKE)
+INCLUDE(altCMakeLists.cmake)
+ELSE()
 cet_add_compiler_flags( CXX -DMONITORING=1 )
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
@@ -112,3 +115,4 @@ install_source( SUBDIRS LArCheating
                         LArUtility
                         LArVertex )
 
+ENDIF()

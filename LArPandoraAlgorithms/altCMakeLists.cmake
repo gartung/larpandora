@@ -1,0 +1,251 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -DMONITORING=1") 
+
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
+
+include_directories( ${PANDORA_INC} )
+include_directories( ${PANDORA_FQ_DIR}/PandoraSDK/include )
+include_directories( ${PANDORA_FQ_DIR}/PandoraMonitoring/include )
+
+
+set(LArPandoraAlgorithms_HEADERS
+     LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h
+     LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h
+     LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h
+     LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.h
+     LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h
+     LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
+     LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h
+     LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
+     LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h
+     LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.h
+     LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h
+     LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
+     LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.h
+     LArThreeDReco/LArHitCreation/HitCreationBaseTool.h
+     LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.h
+     LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h
+     LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h
+     LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.h
+     LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h
+     LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.h
+     LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h
+     LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.h
+     LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.h
+     LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.h
+     LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.h
+     LArThreeDReco/LArShowerMatching/SimpleShowersTool.h
+     LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
+     LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
+     LArThreeDReco/LArShowerMatching/SplitShowersTool.h
+     LArThreeDReco/LArShowerMatching/ClearShowersTool.h
+     LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
+     LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h
+     LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h
+     LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.h
+     LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h
+     LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
+     LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h
+     LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h
+     LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h
+     LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h
+     LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h
+     LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h
+     LArVertex/VertexSelectionAlgorithm.h
+     LArVertex/CandidateVertexCreationAlgorithm.h
+     LArCheating/CheatingCosmicRayIdentificationAlg.h
+     LArCheating/CheatingClusterCreationAlgorithm.h
+     LArCheating/CheatingCosmicRayShowerMatchingAlg.h
+     LArCheating/CheatingPfoCreationAlgorithm.h
+     LArCheating/CheatingVertexCreationAlgorithm.h
+     LArContent.h
+     LArMonitoring/ParticleMonitoringAlgorithm.h
+     LArMonitoring/VisualMonitoringAlgorithm.h
+     LArMonitoring/EventDisplayAlgorithm.h
+     LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h
+     LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h
+     LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h
+     LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h
+     LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.h
+     LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.h
+     LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h
+     LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.h
+     LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.h
+     LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.h
+     LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.h
+     LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.h
+     LArTwoDReco/TwoDParticleCreationAlgorithm.h
+     LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h
+     LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h
+     LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h
+     LArUtility/ListMergingAlgorithm.h
+     LArUtility/ListChangingAlgorithm.h
+     LArUtility/ListPreparationAlgorithm.h
+     LArUtility/ListDissolutionAlgorithm.h
+     LArHelpers/LArVertexHelper.h
+     LArHelpers/LArPointingClusterHelper.h
+     LArHelpers/LArPfoHelper.h
+     LArHelpers/LArMCParticleHelper.h
+     LArHelpers/LArGeometryHelper.h
+     LArHelpers/LArClusterHelper.h
+     LArPlugins/LArTransformationPlugin.h
+     LArPlugins/LArParticleIdPlugins.h
+     LArPlugins/LArPseudoLayerPlugin.h
+     LArPlugins/LArRotationalTransformationPlugin.h
+     LArObjects/LArTwoDSlidingFitResult.h
+     LArObjects/LArOverlapTensor.h
+     LArObjects/LArXOverlap.h
+     LArObjects/LArShowerOverlapResult.h
+     LArObjects/LArTwoDSlidingFitObjects.h
+     LArObjects/LArTwoDSlidingShowerFitResult.h
+     LArObjects/LArPointingCluster.h
+     LArObjects/LArTrackOverlapResult.h
+     )
+
+add_library(LArPandoraAlgorithms SHARED
+     ${LArPandoraAlgorithms_HEADERS}
+     LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.cc
+     LArThreeDReco/LArCosmicRay/CosmicRayIdentificationAlgorithm.cc
+     LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.cc
+     LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.cc
+     LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.cc
+     LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.cc
+     LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.cc
+     LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.cc
+     LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.cc
+     LArThreeDReco/LArPfoMopUp/VertexBasedPfoMergingAlgorithm.cc
+     LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
+     LArThreeDReco/LArShowerFragments/ClearRemnantsTool.cc
+     LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
+     LArThreeDReco/LArHitCreation/TrackHitsBaseTool.cc
+     LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.cc
+     LArThreeDReco/LArHitCreation/LongitudinalTrackHitsBaseTool.cc
+     LArThreeDReco/LArHitCreation/HitCreationBaseTool.cc
+     LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.cc
+     LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.cc
+     LArThreeDReco/LArHitCreation/ClearTransverseTrackHitsTool.cc
+     LArThreeDReco/LArHitCreation/ShowerHitsBaseTool.cc
+     LArThreeDReco/LArHitCreation/MultiValuedLongitudinalTrackHitsTool.cc
+     LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.cc
+     LArThreeDReco/LArHitCreation/TransverseTrackHitsBaseTool.cc
+     LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
+     LArThreeDReco/LArShowerMatching/ClearShowersTool.cc
+     LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.cc
+     LArThreeDReco/LArShowerMatching/SplitShowersTool.cc
+     LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.cc
+     LArThreeDReco/LArShowerMatching/SimpleShowersTool.cc
+     LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.cc
+     LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
+     LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.cc
+     LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.cc
+     LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.cc
+     LArVertex/VertexSelectionAlgorithm.cc
+     LArVertex/CandidateVertexCreationAlgorithm.cc
+     LArCheating/CheatingCosmicRayIdentificationAlg.cc
+     LArCheating/CheatingVertexCreationAlgorithm.cc
+     LArCheating/CheatingClusterCreationAlgorithm.cc
+     LArCheating/CheatingPfoCreationAlgorithm.cc
+     LArCheating/CheatingCosmicRayShowerMatchingAlg.cc
+     LArMonitoring/VisualMonitoringAlgorithm.cc
+     LArMonitoring/EventDisplayAlgorithm.cc
+     LArMonitoring/ParticleMonitoringAlgorithm.cc
+     LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.cc
+     LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.cc
+     LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.cc
+     LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.cc
+     LArTwoDReco/LArSeedFinding/SeedGrowingAlgorithm.cc
+     LArTwoDReco/LArSeedFinding/ClusterCharacterisationAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/DeltaRaySplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSplicingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitConsolidationAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/ClusterSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/LayerSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.cc
+     LArTwoDReco/LArClusterSplitting/TrackConsolidationAlgorithm.cc
+     LArTwoDReco/TwoDParticleCreationAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/ClusterExtensionAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/LongitudinalExtensionAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/SimpleClusterMergingAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.cc
+     LArTwoDReco/LArClusterAssociation/ClusterGrowingAlgorithm.cc
+     LArTwoDReco/LArClusterMopUp/BoundedClusterMergingAlgorithm.cc
+     LArTwoDReco/LArClusterMopUp/ConeBasedMergingAlgorithm.cc
+     LArTwoDReco/LArClusterMopUp/IsolatedHitMergingAlgorithm.cc
+     LArTwoDReco/LArClusterMopUp/ClusterMopUpAlgorithm.cc
+     LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.cc
+     LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.cc
+     LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.cc
+     LArUtility/ListDissolutionAlgorithm.cc
+     LArUtility/ListPreparationAlgorithm.cc
+     LArUtility/ListMergingAlgorithm.cc
+     LArUtility/ListChangingAlgorithm.cc
+     LArHelpers/LArMCParticleHelper.cc
+     LArHelpers/LArPfoHelper.cc
+     LArHelpers/LArVertexHelper.cc
+     LArHelpers/LArGeometryHelper.cc
+     LArHelpers/LArPointingClusterHelper.cc
+     LArHelpers/LArClusterHelper.cc
+     LArPlugins/LArParticleIdPlugins.cc
+     LArPlugins/LArPseudoLayerPlugin.cc
+     LArPlugins/LArRotationalTransformationPlugin.h
+     LArPlugins/LArTransformationPlugin.cc
+     LArObjects/LArTwoDSlidingShowerFitResult.cc
+     LArObjects/LArTwoDSlidingFitResult.cc
+     LArObjects/LArOverlapTensor.cc
+     LArObjects/LArTrackOverlapResult.cc
+     LArObjects/LArShowerOverlapResult.cc
+     LArObjects/LArPointingCluster.cc
+     )
+
+target_link_libraries(LArPandoraAlgorithms
+     ${PANDORASDK}
+     ${PANDORAMONITORING}
+)
+
+install(TARGETS
+     LArPandoraAlgorithms
+     EXPORT larpandoraLibraries
+     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     COMPONENT Runtime
+     )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION 
+     ${CMAKE_INSTALL_INCLUDEDIR} FILES_MATCHING PATTERN "*.h" )
+
+

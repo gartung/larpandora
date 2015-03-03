@@ -1,3 +1,6 @@
+IF(ALT_CMAKE)
+INCLUDE(altCMakeLists.cmake)
+ELSE()
 
 # where should the scripts/..xml file be installed?  Perhaps in bin?
 
@@ -48,3 +51,4 @@ install_source()
 
 add_subdirectory(scripts)
 
+ENDIF()
