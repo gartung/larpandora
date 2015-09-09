@@ -265,6 +265,38 @@ void LArPandoraCollector::CollectShowers(const art::Event &evt, const std::strin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPandoraCollector::CollectShowers(const art::Event &evt, const std::string label, ShowerVector &showerVector, ShowersToHits &showersToHits)
+{
+    art::Handle< std::vector<recob::Shower> > theShowers;
+    evt.getByLabel(label, theShowers);
+
+    if (!theShowers.isValid())
+    {
+        mf::LogDebug("LArPandora") << "  Failed to find showers... " << std::endl;
+        return;
+    }
+    else
+    {
+        mf::LogDebug("LArPandora") << "  Found: " << theShowers->size() << " Showers " << std::endl;
+    }
+
+    art::FindManyP<recob::Hit> theHitAssns(theShowers, evt, label);
+    for (unsigned int i = 0; i < theShowers->size(); ++i)
+    {
+        const art::Ptr<recob::Shower> shower(theShowers, i);
+        showerVector.push_back(shower);
+
+        const std::vector< art::Ptr<recob::Hit> > hits = theHitAssns.at(i);
+        for (unsigned int j=0; j<hits.size(); ++j)
+        {
+            const art::Ptr<recob::Hit> hit = hits.at(j);          
+            showersToHits[shower].push_back(hit);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPandoraCollector::CollectTracks(const art::Event &evt, const std::string label, TrackVector &trackVector,
     PFParticlesToTracks &particlesToTracks)
 {

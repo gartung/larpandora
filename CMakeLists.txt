@@ -60,8 +60,13 @@ cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
 cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
 cet_find_library( LARCONTENT NAMES LArContent PATHS ENV PANDORA_LIB )
 
+include_directories(LArPandoraPCA)
+include_directories(LArPandoraPCA/LACE/include)
+include_directories(LArPandoraPCA/LACE)
+
 # source
 add_subdirectory(LArPandoraInterface)
+add_subdirectory(LArPandoraPCA)
 
 # ups - table and config files
 add_subdirectory(ups)

@@ -65,6 +65,7 @@ typedef std::map< art::Ptr<recob::Hit>,        art::Ptr<recob::PFParticle> >  Hi
 typedef std::map< art::Ptr<recob::Hit>,        art::Ptr<simb::MCParticle> >   HitsToMCParticles;
 typedef std::map< art::Ptr<recob::Hit>,        TrackIDEVector >               HitsToTrackIDEs;
 typedef std::map< art::Ptr<recob::Track>,      CosmicTagVector >              TracksToCosmicTags;
+typedef std::map< art::Ptr<recob::Shower>,      HitVector >                   ShowersToHits;
 
 typedef std::map< int, art::Ptr<recob::PFParticle> >  PFParticleMap;
 typedef std::map< int, art::Ptr<recob::Cluster> >     ClusterMap;
@@ -221,6 +222,17 @@ public:
      */
     static void CollectVertices(const art::Event &evt, const std::string label, VertexVector &vertexVector,
         PFParticlesToVertices &particlesToVertices);
+
+    /**
+      *  @brief Collect the reconstructed Showers and associated Hits from the ART event record   
+      *                                                                                           
+      *  @param evt the ART event record                                                          
+      *  @param label the label for the PFParticle list in the event                              
+      *  @param trackVector the output vector of Shower objects                                   
+      *  @param tracksToHits the output map from Shower to Hit objects
+      */
+      static void CollectShowers(const art::Event &evt, const std::string label, ShowerVector &showerVector,
+	  ShowersToHits &showersToHits);
 
     /**
      *  @brief Build mapping between PFParticles and Hits using PFParticle/SpacePoint/Hit maps

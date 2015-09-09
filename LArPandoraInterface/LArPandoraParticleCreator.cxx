@@ -23,7 +23,8 @@
 // Local LArPandora includes
 #include "LArPandoraInterface/LArPandoraParticleCreator.h"
 #include "LArPandoraInterface/LArPandoraHelper.h"
-
+#include "LArPandoraPCA/LArPCAHelper.h"
+#include "LArPandoraPCA/LArLPCHelper.h"
 // System includes
 #include <iostream>
 #include <limits>
@@ -34,6 +35,7 @@ LArPandoraParticleCreator::LArPandoraParticleCreator(fhicl::ParameterSet const &
 {
     m_buildTracks = pset.get<bool>("BuildTracks", false);
     m_buildShowers = pset.get<bool>("BuildShowers", false);
+    m_useLPC = pset.get<bool>("UseLPC", false);
 
     produces< std::vector<recob::PFParticle> >();
     produces< std::vector<recob::SpacePoint> >();
@@ -260,6 +262,7 @@ void LArPandoraParticleCreator::ProduceArtOutput(art::Event &evt, const HitMap &
     int spacePointCounter(0);
     int clusterCounter(0);
     int trackCounter(0);
+    int showerCounter(0);
     size_t particleCounter(0);
 
     // Build maps of Pandora particles and Pandora vertices
@@ -302,6 +305,8 @@ void LArPandoraParticleCreator::ProduceArtOutput(art::Event &evt, const HitMap &
         recob::Vertex newVertex(pos, vertexCounter++);
         outputVertices->push_back(newVertex);
     }
+
+    static lar_content::LArLPCHelper lpcHelper;
 
     // Loop over Pandora particles and build recob::PFParticles
     for (pandora::PfoVector::iterator pIter = pfoVector.begin(), pIterEnd = pfoVector.end(); pIter != pIterEnd; ++pIter)
@@ -496,28 +501,86 @@ void LArPandoraParticleCreator::ProduceArtOutput(art::Event &evt, const HitMap &
                     outputSeeds->size() - 1, outputSeeds->size());
 
                 if (m_buildTracks)
-                {
-                    try
-                    {
-                        recob::Track newTrack(LArPandoraHelper::BuildTrack(trackCounter, pPfo)); trackCounter++;
-                        outputTracks->push_back(newTrack);
-
-                        util::CreateAssn(*this, evt, *(outputTracks.get()), pfoHits, *(outputTracksToHits.get()));
-                        util::CreateAssn(*this, evt, *(outputParticles.get()), *(outputTracks.get()), *(outputParticlesToTracks.get()),
-                            outputTracks->size() - 1, outputTracks->size());
-                    }
-                    catch (cet::exception &e)
-                    {
-                    }
+		{
+		  try
+                  {
+		    if(m_useLPC){
+		      std::vector<pandora::TrackState> trackPoints;
+		      lpcHelper.RunLPC(pPfo,trackPoints);
+		      recob::Track newTrack(LArPandoraHelper::BuildTrack(trackCounter++, trackPoints)); 
+		      outputTracks->push_back(newTrack);
+		    }
+		    else{
+		      recob::Track newTrack(LArPandoraHelper::BuildTrack(trackCounter, pPfo)); trackCounter++;
+		      outputTracks->push_back(newTrack);
+		    }
+		    util::CreateAssn(*this, evt, *(outputTracks.get()), pfoHits, *(outputTracksToHits.get()));
+		    util::CreateAssn(*this, evt, *(outputParticles.get()), *(outputTracks.get()), *(outputParticlesToTracks.get()),
+				     outputTracks->size() - 1, outputTracks->size());
+		  }
+		  catch (cet::exception &e)
+		  {
+		  }
+		  
                 }
-            }
-        }
+	    }
 
-        //
-        // TODO: Build Showers here
-        //
+	    else if(lar_content::LArPfoHelper::IsShower(pPfo) && pPfo->GetMomentum().GetMagnitudeSquared() > std::numeric_limits<float>::epsilon() && m_buildShowers)
+	    {
+	      std::vector<double> eigenvalues;
+	      std::vector<pandora::CartesianVector> eigenvectors;
+	      double dir[3];
+	      double dirErr[3]  = { 0.0, 0.0, 0.0 };  // TODO: Fill in errors
+	      lar_content::LArPCAHelper::RunPCA(pPfo,eigenvalues,eigenvectors);
+	      
+	      int bestVec=0;
+	      
+	      if(eigenvectors.size()){
+		if(eigenvalues[0]>eigenvalues[1]&&eigenvalues[0]>eigenvalues[2]){bestVec=0;}
+		else if(eigenvalues[1]>eigenvalues[0]&&eigenvalues[1]>eigenvalues[2]){bestVec=1;}
+		else{bestVec=2;}
+		
+		dir[0] = eigenvectors[bestVec].GetX();
+		dir[1] = eigenvectors[bestVec].GetY();
+		dir[2] = eigenvectors[bestVec].GetZ();
+		
+	      }
+	      else{	
+		dir[0] = 0;
+		dir[1] = 0;
+		dir[2] = 0;	
+	      }
+	      
+	      try
+	      {
+		TVector3 dirVec(dir);
+		TVector3 dirErrVec(dirErr);
+		TVector3 posVec(pos);
+		TVector3 posErrVec(posErr);
+		std::vector<double> emptyVec;
+		recob::Shower newShower(dirVec,
+					dirErrVec,
+					posVec,
+					posErrVec,
+					emptyVec,
+					emptyVec,
+					emptyVec,
+					emptyVec,
+					0,
+					showerCounter++);
+
+		outputShowers->push_back(newShower);
+		      
+		util::CreateAssn(*this, evt, *(outputShowers.get()), pfoHits, *(outputShowersToHits.get()));
+		util::CreateAssn(*this, evt, *(outputParticles.get()), *(outputShowers.get()), *(outputParticlesToShowers.get()),
+				 outputShowers->size() - 1, outputShowers->size());
+	      }
+	      catch (cet::exception &e)
+	      {
+	      }
+	    }
+	}
     }
-
     mf::LogDebug("LArPandora") << "   Number of new particles: " << outputParticles->size() << std::endl;
     mf::LogDebug("LArPandora") << "   Number of new clusters: " << outputClusters->size() << std::endl;
     mf::LogDebug("LArPandora") << "   Number of new space points: " << outputSpacePoints->size() << std::endl;

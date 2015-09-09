@@ -8,6 +8,8 @@ include_directories( $ENV{PANDORA_INC} )
 art_make( BASENAME_ONLY
           LIBRARY_NAME  LArPandoraInterface
           LIB_LIBRARIES DetectorProperties_service
+	  		LArPandoraLACE
+			LArPandoraPCA
                         LArProperties_service
                         Geometry
                         Geometry_service

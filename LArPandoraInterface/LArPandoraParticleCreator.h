@@ -57,6 +57,7 @@ protected:
 
     bool      m_buildTracks;           ///<
     bool      m_buildShowers;          ///<
+    bool      m_useLPC;                ///<
 
     TTree    *m_pRecoTree;             ///<
     int       m_run;                   ///<
