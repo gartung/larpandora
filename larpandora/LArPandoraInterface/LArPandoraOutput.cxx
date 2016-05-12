@@ -39,6 +39,21 @@
 #include <iostream>
 #include <limits>
 
+namespace test {
+   template<class T>
+   art::Ptr<T> CreateArtPtr(
+                         art::EDProducer const& prod,
+                         art::Event           & evt,
+                         std::vector<T>  const& a,
+                         size_t                 indx /* = UINT_MAX */) {
+       if(indx == UINT_MAX) indx = a.size() - 1;
+       art::ProductID aid = prod.getProductID< std::vector<T> >(evt);
+       art::Ptr<T> aptr(aid, indx, evt.productGetter(aid));
+       return aptr;
+   }
+
+}
+
 namespace lar_pandora
 {
    
@@ -205,19 +220,28 @@ namespace lar_pandora
             
             const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
             
-            const HitVector hitVector {LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D)};
-            //const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
+           // const HitVector hitVector {LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D)};
+              const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
             //hitVector.push_back(hit);
             
             outputSpacePoints->emplace_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
             
-            auto const aid = (*(settings.m_pProducer)).getProductID<std::vector<recob::SpacePoint> >(evt);
-            art::Ptr<recob::SpacePoint> aptr (aid, outputSpacePoints->size() - 1, evt.productGetter(aid));
+            auto const spid = (*(settings.m_pProducer)).getProductID<std::vector<recob::SpacePoint> >(evt);
+            art::Ptr<recob::SpacePoint> aptr (spid, outputSpacePoints->size() - 1, evt.productGetter(spid));
             
-            (*(outputSpacePointsToHits.get())).addSingle(aptr, hitVector[0]);
+            (*(outputSpacePointsToHits.get())).addSingle(aptr, hit);
             
-            //util::CreateAssn(*(settings.m_pProducer), evt, *(outputSpacePoints.get()), hitVector, *(outputSpacePointsToHits.get()));
-            util::CreateAssn(*(settings.m_pProducer), evt, *(outputParticles.get()), *(outputSpacePoints.get()), *(outputParticlesToSpacePoints.get()), outputSpacePoints->size() - 1, outputSpacePoints->size());
+            //auto const parid = (*(settings.m_pProducer)).getProductID<std::vector<recob::PFParticle> >(evt);
+            //art::Ptr<recob::PFParticle> bptr (parid, outputParticles->size() - 1, evt.productGetter(parid));
+            
+            art::Ptr<recob::PFParticle> bptr = test::CreateArtPtr(*(settings.m_pProducer), evt, *(outputParticles.get()), outputParticles->size() - 1);
+            
+            (*(outputParticlesToSpacePoints.get())).addSingle(bptr, aptr);
+            
+           // util::CreateAssn(*(settings.m_pProducer), evt, *(outputSpacePoints.get()), hitVector, *(outputSpacePointsToHits.get()));
+            
+           // util::CreateAssn(*(settings.m_pProducer), evt, *(outputParticles.get()), *(outputSpacePoints.get()), *(outputParticlesToSpacePoints.get()), outputSpacePoints->size() - 1, outputSpacePoints->size());
+            
          }
          
          // Build 2D Clusters
