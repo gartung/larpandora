@@ -271,7 +271,7 @@ namespace lar_pandora
          }
 #endif
          
-         //Option 3: Using AssnHelper Utility
+         //Option 3: Using PtrMaker Utility
 #ifdef OPTION3
  
          auto const make_sp = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
