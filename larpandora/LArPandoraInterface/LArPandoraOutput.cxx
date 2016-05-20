@@ -5,6 +5,8 @@
  *
  */
 
+#define OPTION3
+
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/FindManyP.h"
 #include "art/Framework/Core/ModuleMacros.h"
@@ -39,24 +41,34 @@
 #include <iostream>
 #include <limits>
 
-namespace test {
-   template<class T>
-   art::Ptr<T> CreateArtPtr(
-                         art::EDProducer const& prod,
-                         art::Event           & evt,
-                         std::vector<T>  const& a,
-                         size_t                 indx /* = UINT_MAX */) {
-       if(indx == UINT_MAX) indx = a.size() - 1;
-       art::ProductID aid = prod.getProductID< std::vector<T> >(evt);
-       art::Ptr<T> aptr(aid, indx, evt.productGetter(aid));
-       return aptr;
+// this namespace will be moved to a different file
+namespace lar {
+   template <class T>
+   class PtrMaker {
+   private:
+      art::ProductID prodId;
+      art::EDProductGetter const* prodGetter;
+      
+   public:
+      PtrMaker(art::Event& evt, art::EDProducer& prod)
+      : prodId(prod.getProductID<std::vector<T> >(evt))
+      , prodGetter(evt.productGetter(prodId))
+      {   };
+      
+      art::Ptr<T> operator()(std::size_t index) const;
+   };
+   
+   template <class T>
+   art::Ptr<T> PtrMaker<T>::operator()(size_t index) const
+   {
+      art::Ptr<T> artPtr(prodId, index, prodGetter);
+      return artPtr;
    }
-
 }
+// end of namespace
 
 namespace lar_pandora
 {
-   
    void LArPandoraOutput::ProduceArtOutput(const Settings &settings, const IdToHitMap &idToHitMap, art::Event &evt)
    {
       mf::LogDebug("LArPandora") << " *** LArPandora::ProduceArtOutput() *** " << std::endl;
@@ -212,7 +224,8 @@ namespace lar_pandora
          
          pandora::CaloHitVector pandoraHitVector3D(pandoraHitList3D.begin(), pandoraHitList3D.end());
          std::sort(pandoraHitVector3D.begin(), pandoraHitVector3D.end(), lar_content::LArClusterHelper::SortHitsByPosition);
-         
+         //Option 1: Unmodified code using CreateAssn
+#ifdef OPTION1
          for (const pandora::CaloHit *const pCaloHit3D : pandoraHitVector3D)
          {
             if (pandora::TPC_3D != pCaloHit3D->GetHitType())
@@ -220,29 +233,68 @@ namespace lar_pandora
             
             const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
             
-           // const HitVector hitVector {LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D)};
-              const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
-            //hitVector.push_back(hit);
+            HitVector hitVector;
+            const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
+            hitVector.push_back(hit);
+            
+            //The above three lines should be replaced with
+            //const HitVector hitVector {LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D)};
             
             outputSpacePoints->emplace_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
             
-            auto const spid = (*(settings.m_pProducer)).getProductID<std::vector<recob::SpacePoint> >(evt);
-            art::Ptr<recob::SpacePoint> aptr (spid, outputSpacePoints->size() - 1, evt.productGetter(spid));
+            util::CreateAssn(*(settings.m_pProducer), evt, *(outputSpacePoints.get()), hitVector, *(outputSpacePointsToHits.get()));
             
-            (*(outputSpacePointsToHits.get())).addSingle(aptr, hit);
-            
-            //auto const parid = (*(settings.m_pProducer)).getProductID<std::vector<recob::PFParticle> >(evt);
-            //art::Ptr<recob::PFParticle> bptr (parid, outputParticles->size() - 1, evt.productGetter(parid));
-            
-            art::Ptr<recob::PFParticle> bptr = test::CreateArtPtr(*(settings.m_pProducer), evt, *(outputParticles.get()), outputParticles->size() - 1);
-            
-            (*(outputParticlesToSpacePoints.get())).addSingle(bptr, aptr);
-            
-           // util::CreateAssn(*(settings.m_pProducer), evt, *(outputSpacePoints.get()), hitVector, *(outputSpacePointsToHits.get()));
-            
-           // util::CreateAssn(*(settings.m_pProducer), evt, *(outputParticles.get()), *(outputSpacePoints.get()), *(outputParticlesToSpacePoints.get()), outputSpacePoints->size() - 1, outputSpacePoints->size());
-            
+            util::CreateAssn(*(settings.m_pProducer), evt, *(outputParticles.get()), *(outputSpacePoints.get()), *(outputParticlesToSpacePoints.get()), outputSpacePoints->size() - 1, outputSpacePoints->size());
          }
+#endif
+         //Option 2: Not using any utility
+#ifdef OPTION2
+         for (const pandora::CaloHit *const pCaloHit3D : pandoraHitVector3D)
+         {
+            if (pandora::TPC_3D != pCaloHit3D->GetHitType())
+               throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+         
+            outputSpacePoints->emplace_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
+            
+            auto const spid = (*(settings.m_pProducer)).getProductID<std::vector<recob::SpacePoint>>(evt);
+            art::Ptr<recob::SpacePoint> aptr (spid, outputSpacePoints->size() - 1, evt.productGetter(spid));
+      
+            const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
+            const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
+            
+            outputSpacePointsToHits->addSingle(aptr, hit);
+            
+            auto const parid = (*(settings.m_pProducer)).getProductID<std::vector<recob::PFParticle>>(evt);
+            art::Ptr<recob::PFParticle> bptr (parid, outputParticles->size() - 1, evt.productGetter(parid));
+       
+            outputParticlesToSpacePoints->addSingle(bptr, aptr);
+         }
+#endif
+         
+         //Option 3: Using AssnHelper Utility
+#ifdef OPTION3
+ 
+         auto const make_sp = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
+         auto const make_pfp = lar::PtrMaker<recob::PFParticle>(evt, (*(settings.m_pProducer)));
+
+         for (const pandora::CaloHit *const pCaloHit3D : pandoraHitVector3D)
+         {
+            if (pandora::TPC_3D != pCaloHit3D->GetHitType())
+               throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+            
+            outputSpacePoints->emplace_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
+            auto const sp = make_sp(outputSpacePoints->size()-1);
+            
+            const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
+            const art::Ptr<recob::Hit> hit = LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
+            
+            outputSpacePointsToHits->addSingle(sp , hit);
+            
+            auto pfp = make_pfp(outputParticles->size() - 1);
+            outputParticlesToSpacePoints->addSingle(pfp, sp);
+         }
+#endif
+         
          
          // Build 2D Clusters
          pandora::ClusterVector pandoraClusterVector(pPfo->GetClusterList().begin(), pPfo->GetClusterList().end());
