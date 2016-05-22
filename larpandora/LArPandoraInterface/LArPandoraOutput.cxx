@@ -54,6 +54,10 @@ namespace lar {
       : prodId(prod.getProductID<std::vector<T> >(evt))
       , prodGetter(evt.productGetter(prodId))
       {   };
+      PtrMaker(art::Event const& evt, art::EDProducer const& prod, std::string instance)
+      : prodId(prod.getProductID<std::vector<T> >(evt, instance))
+      , prodGetter(evt.productGetter(prodId))
+      {   };
       
       art::Ptr<T> operator()(std::size_t index) const;
    };
@@ -280,6 +284,7 @@ namespace lar_pandora
             if (pandora::TPC_3D != pCaloHit3D->GetHitType())
                throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
             outputSpacePoints->push_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
+            
             auto const sp = make_sp(outputSpacePoints->size()-1);
             const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
             outputSpacePointsToHits->addSingle(sp , GetHit(idToHitMap, pCaloHit2D));
