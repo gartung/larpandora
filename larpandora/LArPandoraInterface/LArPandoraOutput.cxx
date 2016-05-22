@@ -43,28 +43,28 @@
 
 // this namespace will be moved to a different file
 namespace lar {
-   template <class T>
+   template <class MODULETYPE, class T>
    class PtrMaker {
    private:
       const art::ProductID prodId;
       art::EDProductGetter const* prodGetter;
       
    public:
-      PtrMaker(art::Event const& evt, art::EDProducer const& prod)
-      : prodId(prod.getProductID<std::vector<T> >(evt))
+      PtrMaker(art::Event const& evt, MODULETYPE const& mtype)
+      : prodId(mtype.template getProductID<std::vector<T> >(evt))
       , prodGetter(evt.productGetter(prodId))
       {   };
       
-      PtrMaker(art::Event const& evt, art::EDProducer const& prod, std::string instance)
-      : prodId(prod.getProductID<std::vector<T> >(evt, instance))
+      PtrMaker(art::Event const& evt, MODULETYPE const& mtype, std::string instance)
+      : prodId(mtype.template getProductID<std::vector<T> >(evt, instance))
       , prodGetter(evt.productGetter(prodId))
       {   };
       
       art::Ptr<T> operator()(std::size_t index) const;
    };
    
-   template <class T>
-   art::Ptr<T> PtrMaker<T>::operator()(size_t index) const
+   template <class MODULETYPE, class T>
+   art::Ptr<T> PtrMaker<MODULETYPE, T>::operator()(size_t index) const
    {
       art::Ptr<T> artPtr(prodId, index, prodGetter);
       return artPtr;
@@ -277,8 +277,8 @@ namespace lar_pandora
          //Option 3: Using PtrMaker Utility
 #ifdef OPTION3
  
-         auto const make_spptr = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
-         auto const make_pfpptr = lar::PtrMaker<recob::PFParticle>(evt, (*(settings.m_pProducer)));
+         auto const make_spptr = lar::PtrMaker<art::EDProducer, recob::SpacePoint>(evt, (*(settings.m_pProducer)));
+         auto const make_pfpptr = lar::PtrMaker<art::EDProducer, recob::PFParticle>(evt, (*(settings.m_pProducer)));
 
          auto make_hitptr = [&idToHitMap](pandora::CaloHit const* p) -> art::Ptr<recob::Hit> {
             const pandora::CaloHit* const pCaloHit2D = static_cast<const pandora::CaloHit*>(p->GetParentCaloHitAddress());
