@@ -54,6 +54,7 @@ namespace lar {
       : prodId(prod.getProductID<std::vector<T> >(evt))
       , prodGetter(evt.productGetter(prodId))
       {   };
+      
       PtrMaker(art::Event const& evt, art::EDProducer const& prod, std::string instance)
       : prodId(prod.getProductID<std::vector<T> >(evt, instance))
       , prodGetter(evt.productGetter(prodId))
@@ -276,19 +277,24 @@ namespace lar_pandora
          //Option 3: Using PtrMaker Utility
 #ifdef OPTION3
  
-         auto const make_sp = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
-         auto const make_pfp = lar::PtrMaker<recob::PFParticle>(evt, (*(settings.m_pProducer)));
+         auto const make_spptr = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
+         auto const make_pfpptr = lar::PtrMaker<recob::PFParticle>(evt, (*(settings.m_pProducer)));
 
+         auto make_hitptr = [&idToHitMap](pandora::CaloHit const* p) -> art::Ptr<recob::Hit> {
+            const pandora::CaloHit* const pCaloHit2D = static_cast<const pandora::CaloHit*>(p->GetParentCaloHitAddress());
+            return LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
+         };
+         
          for (const pandora::CaloHit *const pCaloHit3D : pandoraHitVector3D)
          {
             if (pandora::TPC_3D != pCaloHit3D->GetHitType())
                throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+            
             outputSpacePoints->push_back(LArPandoraOutput::BuildSpacePoint(spacePointCounter++, pCaloHit3D));
             
-            auto const sp = make_sp(outputSpacePoints->size()-1);
-            const pandora::CaloHit *const pCaloHit2D = static_cast<const pandora::CaloHit*>(pCaloHit3D->GetParentCaloHitAddress());
-            outputSpacePointsToHits->addSingle(sp , GetHit(idToHitMap, pCaloHit2D));
-            outputParticlesToSpacePoints->addSingle(make_pfp(outputParticles->size() - 1), sp);
+            auto const spptr = make_spptr(outputSpacePoints->size()-1);
+            outputSpacePointsToHits->addSingle(spptr , make_hitptr(pCaloHit3D));
+            outputParticlesToSpacePoints->addSingle(make_pfpptr(outputParticles->size() - 1), spptr);
          }
 #endif
          
