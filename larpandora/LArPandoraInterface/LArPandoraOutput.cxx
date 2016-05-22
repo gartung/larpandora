@@ -285,6 +285,7 @@ namespace lar_pandora
             return LArPandoraOutput::GetHit(idToHitMap, pCaloHit2D);
          };
          
+         auto const pfpptr = make_pfpptr(outputParticles->size() - 1);
          for (const pandora::CaloHit *const pCaloHit3D : pandoraHitVector3D)
          {
             if (pandora::TPC_3D != pCaloHit3D->GetHitType())
@@ -294,7 +295,7 @@ namespace lar_pandora
             
             auto const spptr = make_spptr(outputSpacePoints->size()-1);
             outputSpacePointsToHits->addSingle(spptr , make_hitptr(pCaloHit3D));
-            outputParticlesToSpacePoints->addSingle(make_pfpptr(outputParticles->size() - 1), spptr);
+            outputParticlesToSpacePoints->addSingle(pfpptr, spptr);
          }
 #endif
          
