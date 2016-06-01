@@ -43,28 +43,31 @@
 
 // this namespace will be moved to a different file
 namespace lar {
-   template <class MODULETYPE, class T>
+   // to create art::Ptrs in to a particular collection in an event
+   template <class T>
    class PtrMaker {
+   public:
+      //Creates a PtrMaker that creates Ptrs in to a collection of type C created by the module of type MODULETYPE, where the collection has instance name "instance"
+      template <class MODULETYPE, class C = std::vector<T>>
+      PtrMaker(art::Event const& evt, MODULETYPE const& module, std::string const & instance = std::string());
+      
+      //Creates a Ptr to an object in the slot indicated by "index"
+      art::Ptr<T> operator()(std::size_t index) const;
+      
    private:
       const art::ProductID prodId;
       art::EDProductGetter const* prodGetter;
-      
-   public:
-      PtrMaker(art::Event const& evt, MODULETYPE const& mtype)
-      : prodId(mtype.template getProductID<std::vector<T> >(evt))
-      , prodGetter(evt.productGetter(prodId))
-      {   };
-      
-      PtrMaker(art::Event const& evt, MODULETYPE const& mtype, std::string instance)
-      : prodId(mtype.template getProductID<std::vector<T> >(evt, instance))
-      , prodGetter(evt.productGetter(prodId))
-      {   };
-      
-      art::Ptr<T> operator()(std::size_t index) const;
    };
    
-   template <class MODULETYPE, class T>
-   art::Ptr<T> PtrMaker<MODULETYPE, T>::operator()(size_t index) const
+   template <class T>
+   template <class MODULETYPE, class C>
+   PtrMaker<T>::PtrMaker(art::Event const& evt, MODULETYPE const& module, std::string const & instance)
+   : prodId(module.template getProductID<C>(evt, instance))
+   , prodGetter(evt.productGetter(prodId))
+   {   }
+   
+   template <class T>
+   art::Ptr<T> PtrMaker<T>::operator()(size_t index) const
    {
       art::Ptr<T> artPtr(prodId, index, prodGetter);
       return artPtr;
@@ -277,8 +280,8 @@ namespace lar_pandora
          //Option 3: Using PtrMaker Utility
 #ifdef OPTION3
  
-         auto const make_spptr = lar::PtrMaker<art::EDProducer, recob::SpacePoint>(evt, (*(settings.m_pProducer)));
-         auto const make_pfpptr = lar::PtrMaker<art::EDProducer, recob::PFParticle>(evt, (*(settings.m_pProducer)));
+         auto const make_spptr = lar::PtrMaker<recob::SpacePoint>(evt, (*(settings.m_pProducer)));
+         auto const make_pfpptr = lar::PtrMaker<recob::PFParticle>(evt, (*(settings.m_pProducer)));
 
          auto make_hitptr = [&idToHitMap](pandora::CaloHit const* p) -> art::Ptr<recob::Hit> {
             const pandora::CaloHit* const pCaloHit2D = static_cast<const pandora::CaloHit*>(p->GetParentCaloHitAddress());
