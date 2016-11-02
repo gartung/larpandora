@@ -12,6 +12,7 @@
 
 // Pandora includes
 #include "Objects/CartesianVector.h"
+
 #include "larpandoracontent/LArObjects/LArTrackPfo.h"
 
 // Local LArPandora includes
