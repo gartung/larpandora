@@ -177,11 +177,6 @@ void LArPandoraGeometry::LoadGeometry(LArDriftVolumeList &driftVolumeList)
 
     // Load Geometry Service
     art::ServiceHandle<geo::Geometry> theGeometry;
-    const unsigned int wirePlanes(theGeometry->MaxPlanes());
-
-    const float wirePitchU(theGeometry->WirePitch(geo::kU));
-    const float wirePitchV(theGeometry->WirePitch(geo::kV));
-    const float wirePitchW((wirePlanes > 2) ? theGeometry->WirePitch(geo::kW) : 0.5f * (wirePitchU + wirePitchV));
 
     const float maxDeltaTheta(0.01f); // leave this hard-coded for now
 
@@ -199,13 +194,23 @@ void LArPandoraGeometry::LoadGeometry(LArDriftVolumeList &driftVolumeList)
             // Use this TPC to seed a drift volume
             const geo::TPCGeo &theTpc1(theGeometry->TPC(itpc1, icstat));
             cstatList.insert(itpc1);
+            
+            unsigned int numPlanes1 = theTpc1.Nplanes();
+            
+            // From what I see, the call to the drift volume list at the end of this method assumes three planes
+            // must exist... so set up that way here
+            std::vector<float>       wirePitchVec = {0., 0., 0.};
+            std::vector<float>       wireAngleVec = {0., 0., 0.};
+            std::vector<geo::View_t> planeViewVec(numPlanes1);
 
-            const float wireAngleU(0.5f * M_PI - theGeometry->WireAngleToVertical(geo::kU, itpc1, icstat));
-            const float wireAngleV(0.5f * M_PI - theGeometry->WireAngleToVertical(geo::kV, itpc1, icstat));
-            const float wireAngleW((wirePlanes > 2) ? (0.5f * M_PI - theGeometry->WireAngleToVertical(geo::kW, itpc1, icstat)) : 0.f);
-
-            if (std::fabs(wireAngleW) > maxDeltaTheta)
-                throw cet::exception("LArPandora") << " LArPandoraGeometry::LoadGeometry --- the W-wires are not vertical in this detector ";
+            for(unsigned int planeIdx = 0; planeIdx < numPlanes1; planeIdx++)
+            {
+                const geo::PlaneGeo& planeGeo = theTpc1.Plane(planeIdx);
+                
+                wirePitchVec.at(planeIdx) = planeGeo.WirePitch();
+                wireAngleVec.at(planeIdx) = planeGeo.ThetaZ();
+                planeViewVec.at(planeIdx) = planeGeo.View();
+            }
 
             double localCoord1[3] = {0., 0., 0.};
             double worldCoord1[3] = {0., 0., 0.};
@@ -236,13 +241,25 @@ void LArPandoraGeometry::LoadGeometry(LArDriftVolumeList &driftVolumeList)
 
                 if (theTpc1.DriftDirection() != theTpc2.DriftDirection())
                     continue;
-
-                const float dThetaU(theGeometry->WireAngleToVertical(geo::kU, itpc1, icstat) - theGeometry->WireAngleToVertical(geo::kU, itpc2, icstat));
-                const float dThetaV(theGeometry->WireAngleToVertical(geo::kV, itpc1, icstat) - theGeometry->WireAngleToVertical(geo::kV, itpc2, icstat));
-                const float dThetaW((wirePlanes > 2) ? (theGeometry->WireAngleToVertical(geo::kW, itpc1, icstat) - theGeometry->WireAngleToVertical(geo::kW, itpc2, icstat)) : 0.f);
-
-                if (dThetaU > maxDeltaTheta || dThetaV > maxDeltaTheta || dThetaW > maxDeltaTheta)
-                    continue;
+                
+                unsigned int numPlanes2 = theTpc2.Nplanes();
+                
+                if (numPlanes1 != numPlanes2) continue;
+                
+                bool inTolerance(true);
+                
+                for(unsigned int planeIdx = 0; planeIdx < numPlanes2; planeIdx++)
+                {
+                    const geo::PlaneGeo& planeGeo = theTpc2.Plane(planeIdx);
+                    
+                    if (planeGeo.View() != planeViewVec.at(planeIdx) || std::abs(wireAngleVec.at(planeIdx) - planeGeo.ThetaZ()) > maxDeltaTheta)
+                    {
+                        inTolerance = false;
+                        break;
+                    }
+                }
+                
+                if (!inTolerance) continue;
 
                 double localCoord2[3] = {0., 0., 0.};
                 double worldCoord2[3] = {0., 0., 0.};
@@ -275,10 +292,10 @@ void LArPandoraGeometry::LoadGeometry(LArDriftVolumeList &driftVolumeList)
 
             // Create new daughter drift volume (volume ID = 0 to N-1)
             driftVolumeList.push_back(LArDriftVolume(driftVolumeList.size(), isPositiveDrift,
-                wirePitchU, wirePitchV, wirePitchW, wireAngleU, wireAngleV, wireAngleW,
+                wirePitchVec.at(0), wirePitchVec.at(1), wirePitchVec.at(2), wireAngleVec.at(0), wireAngleVec.at(1), wireAngleVec.at(2),
                 0.5f * (driftMaxX + driftMinX), 0.5f * (driftMaxY + driftMinY), 0.5f * (driftMaxZ + driftMinZ),
                 (driftMaxX - driftMinX), (driftMaxY - driftMinY), (driftMaxZ - driftMinZ),
-                (wirePitchU + wirePitchV + wirePitchW + 0.1f), tpcVolumeList));
+                (std::accumulate(wirePitchVec.begin(),wirePitchVec.end(),0.) + 0.1f), tpcVolumeList));
         }
     }
 
