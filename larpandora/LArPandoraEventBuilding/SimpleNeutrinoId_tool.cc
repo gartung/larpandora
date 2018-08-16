@@ -51,7 +51,7 @@ SimpleNeutrinoId::SimpleNeutrinoId(fhicl::ParameterSet const &/*pset*/)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleNeutrinoId::ClassifySlices(SliceVector &slices, const art::Event &/*evt*/) 
+void SimpleNeutrinoId::ClassifySlices(SliceVector &slices, const art::Event &evt) 
 {
     if (slices.empty()) return;
 
@@ -74,6 +74,8 @@ void SimpleNeutrinoId::ClassifySlices(SliceVector &slices, const art::Event &/*e
 
     // Tag the most probable slice as a neutrino
     slices.at(mostProbableSliceIndex).TagAsNeutrino();
+
+    this->GetSliceMetadata(slices, evt);
 }
 
 } // namespace lar_pandora
