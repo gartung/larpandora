@@ -37,14 +37,14 @@ public:
     void ClassifySlices(SliceVector &slices, const art::Event &evt) override;
         
 private:
-    bool          m_enableTestMode;
+    bool          m_enableTestMode;     ///< If test mode should be enabled - in test mode, output slice metadata to external root file
 
-    TTree        *m_tree;
-    int           m_interactionType;
-    float         m_nuEnergy;
-    SliceMetadata m_outputMetadata;
-    float         m_topologicalScore;
-    bool          m_isTaggedAsNu;
+    TTree        *m_tree;               ///< The TTree to fill in test mode
+    int           m_interactionType;    ///< The interaction type of the current event 
+    float         m_nuEnergy;           ///< The energy of the neutrino in the current event
+    SliceMetadata m_outputMetadata;     ///< The metadata object for the current slice to output
+    float         m_topologicalScore;   ///< The topological score from pandora for the current slice to output
+    bool          m_isTaggedAsNu;       ///< If the current slice has been tagged as a neutrino - to output
 };
 
 DEFINE_ART_CLASS_TOOL(SimpleNeutrinoId)
