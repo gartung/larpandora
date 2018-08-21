@@ -42,10 +42,10 @@ public:
          */
         SliceMetadata();
 
-        float m_purity;          ///< The fraction of hits in the slice that are neutrino induced
-        float m_completeness;    ///< The fraction of all neutrino induced hits tthat are inteh slice
-        float m_nHits;           ///< The number of hits in the slice
-        bool  m_isMostComplete;  ///< If the slice has the highest completeness in the event
+        float        m_purity;          ///< The fraction of hits in the slice that are neutrino induced
+        float        m_completeness;    ///< The fraction of all neutrino induced hits tthat are inteh slice
+        unsigned int m_nHits;           ///< The number of hits in the slice
+        bool         m_isMostComplete;  ///< If the slice has the highest completeness in the event
     };
     typedef std::vector<SliceMetadata> SliceMetadataVector;
 
