@@ -19,10 +19,8 @@
 namespace lar_pandora
 {
 
-void NeutrinoIdBaseTool::GetSliceMetadata(SliceVector &slices, const art::Event &evt) const
+void NeutrinoIdBaseTool::GetSliceMetadata(const SliceVector &slices, const art::Event &evt, SliceMetadataVector &sliceMetadata, int &interactionType, float &nuEnergy) const
 {
-    std::cout << "===== GETTING SLICE METADATA ==============================================================================" << std::endl;
-
     // TODO make configurable
     const std::string truthLabel("generator");
     const std::string mcParticleLabel("largeant");
@@ -31,43 +29,28 @@ void NeutrinoIdBaseTool::GetSliceMetadata(SliceVector &slices, const art::Event 
     const std::string pandoraLabel("pandoraPatRec:allOutcomes");
     // ----
 
+    // Find the beam neutrino in MC
     const auto beamNuMCTruth(this->GetBeamNeutrinoMCTruth(evt, truthLabel));
-    std::cout << "Found beam neutrino" << std::endl;
-    std::cout << "  Interaction type : " << beamNuMCTruth->GetNeutrino().InteractionType() << std::endl;
-    std::cout << "  Energy           : " << beamNuMCTruth->GetNeutrino().Nu().E() << std::endl;
+    const auto mcNeutrino(beamNuMCTruth->GetNeutrino());
+    interactionType = mcNeutrino.InteractionType();
+    nuEnergy = mcNeutrino.Nu().E();
     
+    // Collect all MC particles resulting from the beam neutrino
     MCParticleVector mcParticles;
     this->CollectNeutrinoMCParticles(evt, truthLabel, mcParticleLabel, beamNuMCTruth, mcParticles);
-    std::cout << "Found " << mcParticles.size() << " neutrino induced MCParticles!" << std::endl;
 
+    // Get the hits and determine which are neutrino induced
     HitVector hits;
     HitToBoolMap hitToIsNuInducedMap;
     this->GetHitOrigins(evt, hitLabel, backtrackLabel, mcParticles, hits, hitToIsNuInducedMap);
-    std::cout << "Found " << hits.size() << " hits" << std::endl;
-
     const unsigned int nNuHits(this->CountNeutrinoHits(hits, hitToIsNuInducedMap));
-    std::cout << "  Of which " << nNuHits << " are neutrino induced" << std::endl;
 
+    // Get the mapping from PFParticle to hits through clusters
     PFParticlesToHits pfParticleToHitsMap;
     this->GetPFParticleToHitsMap(evt, pandoraLabel, pfParticleToHitsMap);
 
-    for (unsigned int sliceIndex = 0; sliceIndex < slices.size(); ++sliceIndex)
-    {
-        const Slice &slice(slices.at(sliceIndex));
-        HitVector hits;
-        this->GetReconstructedHitsInSlice(slice, pfParticleToHitsMap, hits);
-
-        const unsigned int nHitsInSlice(hits.size());
-        const unsigned int nNuHitsInSlice(this->CountNeutrinoHits(hits, hitToIsNuInducedMap));
-
-        std::cout << "Slice " << sliceIndex << std::endl;
-        std::cout << "  nHits        : " << nHitsInSlice << std::endl;
-        std::cout << "  nNuHits      : " << nNuHitsInSlice << std::endl;
-        std::cout << "  purity       : " << ((nHitsInSlice == 0) ? -1.f : static_cast<float>(nNuHitsInSlice) / static_cast<float>(nHitsInSlice)) << std::endl;
-        std::cout << "  completeness : " << ((nNuHits == 0) ? -1.f : static_cast<float>(nNuHitsInSlice) / static_cast<float>(nNuHits)) << std::endl;
-    }
-
-    std::cout << "===========================================================================================================" << std::endl;
+    // Calculate the metadata for each slice
+    this->GetSliceMetadata(slices, pfParticleToHitsMap, hitToIsNuInducedMap, nNuHits, sliceMetadata);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
@@ -233,6 +216,58 @@ void NeutrinoIdBaseTool::CollectHits(const PFParticleVector &pfParticles, const 
                 hits.push_back(hit);
         }
     }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdBaseTool::GetSliceMetadata(const SliceVector &slices, const PFParticlesToHits &pfParticleToHitsMap, const HitToBoolMap &hitToIsNuInducedMap, const unsigned int nNuHits, SliceMetadataVector &sliceMetadata) const
+{
+    if (!sliceMetadata.empty())
+        throw cet::exception("LArPandora") << " NeutrinoIdBaseTool::GetSliceMetadata - non empty input metadata vector" << std::endl;
+
+    if (slices.empty())
+        return;
+
+    unsigned int mostCompleteSliceIndex(0);
+    unsigned int maxNuHits(0);
+
+    for (unsigned int sliceIndex = 0; sliceIndex < slices.size(); ++sliceIndex)
+    {
+        const Slice &slice(slices.at(sliceIndex));
+        HitVector hits;
+        this->GetReconstructedHitsInSlice(slice, pfParticleToHitsMap, hits);
+
+        const unsigned int nHitsInSlice(hits.size());
+        const unsigned int nNuHitsInSlice(this->CountNeutrinoHits(hits, hitToIsNuInducedMap));
+
+        // ATTN possible reproducibility issue here if input slices aren't sorted
+        // TODO check this
+        if (nNuHitsInSlice > maxNuHits)
+        {
+            mostCompleteSliceIndex = sliceIndex;
+            maxNuHits = nNuHitsInSlice;
+        }
+
+        SliceMetadata metadata;
+        metadata.m_nHits = nHitsInSlice;
+        metadata.m_purity = ((nHitsInSlice == 0) ? -1.f : static_cast<float>(nNuHitsInSlice) / static_cast<float>(nHitsInSlice));
+        metadata.m_completeness = ((nNuHits == 0) ? -1.f : static_cast<float>(nNuHitsInSlice) / static_cast<float>(nNuHits));
+        metadata.m_isMostComplete = false;
+
+        sliceMetadata.push_back(metadata);
+    }
+
+    sliceMetadata.at(mostCompleteSliceIndex).m_isMostComplete = true;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+        
+NeutrinoIdBaseTool::SliceMetadata::SliceMetadata() :
+    m_purity(-std::numeric_limits<float>::max()),
+    m_completeness(-std::numeric_limits<float>::max()),
+    m_nHits(std::numeric_limits<unsigned int>::max()),
+    m_isMostComplete(false)
+{
 }
 
 } // namespace lar_pandora

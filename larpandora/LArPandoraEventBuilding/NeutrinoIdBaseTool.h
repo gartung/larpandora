@@ -30,11 +30,24 @@ public:
      *  @param  evt the art event
      */
     virtual void ClassifySlices(SliceVector &slices, const art::Event &evt) = 0;
+    
+    class SliceMetadata
+    {
+    public:
+        SliceMetadata();
+
+        float m_purity;
+        float m_completeness;
+        float m_nHits;
+        bool  m_isMostComplete;
+    };
+    typedef std::vector<SliceMetadata> SliceMetadataVector;
 
 protected:
-    void GetSliceMetadata(SliceVector &slices, const art::Event &evt) const;
+    void GetSliceMetadata(const SliceVector &slices, const art::Event &evt, SliceMetadataVector &sliceMetadata, int &interactionType, float &nuEnergy) const;
 
 private:
+    
     typedef std::unordered_map<art::Ptr<recob::Hit>, bool> HitToBoolMap;
 
     art::Ptr<simb::MCTruth> GetBeamNeutrinoMCTruth(const art::Event &evt, const std::string &truthLabel) const;
@@ -44,6 +57,7 @@ private:
     void GetPFParticleToHitsMap(const art::Event &evt, const std::string &pandoraLabel, PFParticlesToHits &pfParticleToHitsMap) const;
     void GetReconstructedHitsInSlice(const Slice &slice, const PFParticlesToHits &pfParticleToHitsMap, HitVector &hits) const;
     void CollectHits(const PFParticleVector &pfParticles, const PFParticlesToHits &pfParticleToHitsMap, HitVector &hits) const;
+    void GetSliceMetadata(const SliceVector &slices, const PFParticlesToHits &pfParticleToHitsMap, const HitToBoolMap &hitToIsNuInducedMap, const unsigned int nNuHits, SliceMetadataVector &sliceMetadata) const;
 };
 
 } // namespace lar_pandora
