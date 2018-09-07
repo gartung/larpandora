@@ -37,7 +37,16 @@ public:
     void ClassifySlices(SliceVector &slices, const art::Event &evt) override;
         
 private:
+    /**
+     *  @brief  Write metadata about each slice to the external root file
+     *
+     *  @param  slices the input vector of slices
+     *  @param  evt the art event
+     */
+    void WriteMetadata(const SliceVector &slices, const art::Event &evt);
+
     bool          m_enableTestMode;     ///< If test mode should be enabled - in test mode, output slice metadata to external root file
+    bool          m_hasMCNeutrino;      ///< If the input sample has MC information on the neutrino
 
     TTree        *m_tree;               ///< The TTree to fill in test mode
     int           m_interactionType;    ///< The interaction type of the current event 
@@ -60,8 +69,9 @@ DEFINE_ART_CLASS_TOOL(SimpleNeutrinoId)
 namespace lar_pandora
 {
     
-SimpleNeutrinoId::SimpleNeutrinoId(fhicl::ParameterSet const &/*pset*/) :
-    m_enableTestMode(true), // TODO make this configurable
+SimpleNeutrinoId::SimpleNeutrinoId(fhicl::ParameterSet const &pset) :
+    m_enableTestMode(pset.get<bool>("EnableTestMode", false)),
+    m_hasMCNeutrino(pset.get<bool>("HasMCNeutrino", false)),
     m_interactionType(-std::numeric_limits<int>::max()),
     m_nuEnergy(-std::numeric_limits<float>::max()),
     m_topologicalScore(-std::numeric_limits<float>::max()),
@@ -72,14 +82,16 @@ SimpleNeutrinoId::SimpleNeutrinoId(fhicl::ParameterSet const &/*pset*/) :
         art::ServiceHandle<art::TFileService> fileService;
         m_tree = fileService->make<TTree>("sliceData","");
 
-        m_tree->Branch("interactionType", &m_interactionType, "interactionType/I");
-        m_tree->Branch("nuEnergy", &m_nuEnergy, "nuEnergy/F");
+        if (m_hasMCNeutrino)
+        {
+            m_tree->Branch("interactionType", &m_interactionType, "interactionType/I");
+            m_tree->Branch("nuEnergy", &m_nuEnergy, "nuEnergy/F");
+            m_tree->Branch("purity", &m_outputMetadata.m_purity, "purity/F");
+            m_tree->Branch("completeness", &m_outputMetadata.m_completeness, "completeness/F");
+            m_tree->Branch("isMostComplete", &m_outputMetadata.m_isMostComplete, "isMostComplete/O");
+        }
 
         m_tree->Branch("nHits", &m_outputMetadata.m_nHits, "nHits/i");
-        m_tree->Branch("purity", &m_outputMetadata.m_purity, "purity/F");
-        m_tree->Branch("completeness", &m_outputMetadata.m_completeness, "completeness/F");
-        m_tree->Branch("isMostComplete", &m_outputMetadata.m_isMostComplete, "isMostComplete/O");
-        
         m_tree->Branch("topologicalScore", &m_topologicalScore, "topologicalScore/F");
         m_tree->Branch("isTaggedAsNu", &m_isTaggedAsNu, "isTaggedAsNu/O");
     }
@@ -109,20 +121,37 @@ void SimpleNeutrinoId::ClassifySlices(SliceVector &slices, const art::Event &evt
     slices.at(mostProbableSliceIndex).TagAsNeutrino();
 
     if (m_enableTestMode)
-    {
-        SliceMetadataVector sliceMetadata;
+        this->WriteMetadata(slices, evt);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void SimpleNeutrinoId::WriteMetadata(const SliceVector &slices, const art::Event &evt)
+{
+    if (!m_enableTestMode)
+        throw cet::exception("LArPandora") << " NeutrinoIdBaseTool::WriteMetadata - test mode isn't enabled!" << std::endl;
+
+    SliceMetadataVector sliceMetadata;
+    if (m_hasMCNeutrino)
         this->GetSliceMetadata(slices, evt, sliceMetadata, m_interactionType, m_nuEnergy);
 
-        for (unsigned int sliceIndex = 0; sliceIndex < slices.size(); ++sliceIndex)
-        {
-            const auto &slice(slices.at(sliceIndex));
-            
-            m_topologicalScore = slice.GetNeutrinoScore();
-            m_isTaggedAsNu = slice.IsTaggedAsNeutrino();
-            m_outputMetadata = sliceMetadata.at(sliceIndex);
+    for (unsigned int sliceIndex = 0; sliceIndex < slices.size(); ++sliceIndex)
+    {
+        const auto &slice(slices.at(sliceIndex));
 
-            m_tree->Fill();
+        m_topologicalScore = slice.GetNeutrinoScore();
+        m_isTaggedAsNu = slice.IsTaggedAsNeutrino();
+
+        if (m_hasMCNeutrino)
+        {
+            m_outputMetadata = sliceMetadata.at(sliceIndex);
         }
+        else
+        {
+            m_outputMetadata.m_nHits = this->GetNHitsInSlice(slice, evt);
+        }
+
+        m_tree->Fill();
     }
 }
 

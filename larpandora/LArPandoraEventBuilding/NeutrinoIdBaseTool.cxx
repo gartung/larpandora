@@ -55,6 +55,24 @@ void NeutrinoIdBaseTool::GetSliceMetadata(const SliceVector &slices, const art::
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 
+unsigned int NeutrinoIdBaseTool::GetNHitsInSlice(const Slice &slice, const art::Event &evt) const
+{
+    // TODO make configurable
+    const std::string pandoraLabel("pandoraPatRec:allOutcomes");
+    // ----
+    
+    // Get the mapping from PFParticle to hits through clusters
+    PFParticlesToHits pfParticleToHitsMap;
+    this->GetPFParticleToHitsMap(evt, pandoraLabel, pfParticleToHitsMap);
+
+    HitVector hits;
+    this->GetReconstructedHitsInSlice(slice, pfParticleToHitsMap, hits);
+
+    return hits.size();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+
 art::Ptr<simb::MCTruth> NeutrinoIdBaseTool::GetBeamNeutrinoMCTruth(const art::Event &evt, const std::string &truthLabel) const
 {
     art::Handle< std::vector<simb::MCTruth> > mcTruthHandle;

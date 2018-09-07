@@ -61,6 +61,15 @@ protected:
      */ 
     void GetSliceMetadata(const SliceVector &slices, const art::Event &evt, SliceMetadataVector &sliceMetadata, int &interactionType, float &nuEnergy) const;
 
+    /**
+     *  @brief  Get MC metadata about each slice
+     *
+     *  @param  slice the slice
+     *  
+     *  @return the number of hits in the slice
+     */
+    unsigned int GetNHitsInSlice(const Slice &slice, const art::Event &evt) const;
+
 private:
     typedef std::unordered_map<art::Ptr<recob::Hit>, bool> HitToBoolMap;
 
