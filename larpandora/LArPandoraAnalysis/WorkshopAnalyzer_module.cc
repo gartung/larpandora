@@ -66,6 +66,7 @@ WorkshopAnalyzer::WorkshopAnalyzer(fhicl::ParameterSet const &parameterSet) :
 
     // Add the branch
     m_tree->Branch("nTracks", &m_nTracks, "nTracks/I");
+    m_tree->Branch("nPFParticles", &m_nPFParticles, "nPFParticles/I");
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
