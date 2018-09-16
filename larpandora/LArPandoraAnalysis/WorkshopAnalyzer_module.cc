@@ -27,7 +27,10 @@ private:
     std::string  m_trackLabel;             ///< The input label for the track producer
 
     TTree       *m_tree;                   ///< The output tree
-    int          m_nTracks;                ///< The number of neutrino induced tracks, to be used in the tree
+
+    // Variables for use in branches
+    int          m_nTracks;                ///< The number of neutrino induced tracks
+    int          m_nPFParticles;           ///< The number of neutrino induced particles
 };
 
 DEFINE_ART_MODULE(WorkshopAnalyzer)
