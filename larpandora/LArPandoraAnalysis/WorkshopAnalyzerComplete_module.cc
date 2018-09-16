@@ -27,7 +27,10 @@ private:
     std::string  m_trackLabel;             ///< The input label for the track producer
 
     TTree       *m_tree;                   ///< The output tree
-    int          m_nTracks;                ///< The number of neutrino induced tracks, to be used in the tree
+
+    // Variables for use in branches
+    int          m_nTracks;                ///< The number of neutrino induced tracks
+    int          m_nPFParticles;           ///< The number of neutrino induced particles
 };
 
 DEFINE_ART_MODULE(WorkshopAnalyzerComplete)
@@ -54,15 +57,17 @@ WorkshopAnalyzerComplete::WorkshopAnalyzerComplete(fhicl::ParameterSet const &pa
     EDAnalyzer(parameterSet),
     m_pandoraLabel(parameterSet.get<std::string>("PandoraLabel")),
     m_trackLabel(parameterSet.get<std::string>("TrackLabel")),
-    m_nTracks(std::numeric_limits<int>::max())
+    m_nTracks(-std::numeric_limits<int>::max()),
+    m_nPFParticles(-std::numeric_limits<int>::max())
 {
 
     // Set up the output tree
     art::ServiceHandle<art::TFileService> fileService;
     m_tree = fileService->make<TTree>("workshop", "Pandora FNAL workshop example analysis");
 
-    // Add the branch
+    // Add the branches
     m_tree->Branch("nTracks", &m_nTracks, "nTracks/I");
+    m_tree->Branch("nPFParticles", &m_nPFParticles, "nPFParticles/I");
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +115,9 @@ void WorkshopAnalyzerComplete::analyze(art::Event const &event)
         // If we get to here, then the PFParticle's parent is the reconstructed neutrino! So it's a reconstructed final state
         finalStatePFParticles.push_back(pfParticle);
     }
-    
+
+    // Set the number of neutrino induced PFParticles
+    m_nPFParticles = finalStatePFParticles.size();
 
     // Count how many PFParticles have an associated track
     m_nTracks = 0;
