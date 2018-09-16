@@ -1,0 +1,41 @@
+#include "services_microboone.fcl"
+
+BEGIN_PROLOG
+
+pandora_workshop_analyzer:
+{
+    module_type: "WorkshopAnalyzer"
+}
+
+workshop_analyzer:              @local::pandora_workshop_analyzer
+workshop_analyzer.PandoraLabel: "pandora"
+workshop_analyzer.TrackLabel:   "pandora"
+
+END_PROLOG
+
+process_name : Workshop
+
+source : {
+    module_type : RootInput
+    maxEvents   : -1
+}
+
+services :
+{
+    TFileService: { fileName: "WorkshopAnalyzerOutput.root" }
+}
+
+outputs: {}
+
+physics: {
+    producers : {}
+    analyzers: {
+        myana: @local::workshop_analyzer
+    }
+    filters : {}
+
+    path0 : [ myana ]
+    end_paths: [ path0 ]
+}
+
+

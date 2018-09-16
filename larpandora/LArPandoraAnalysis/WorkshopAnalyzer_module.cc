@@ -1,12 +1,5 @@
 #include "art/Framework/Core/EDAnalyzer.h"
 #include "art/Framework/Core/ModuleMacros.h"
-#include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
-#include "art/Framework/Principal/Run.h"
-#include "art/Framework/Principal/SubRun.h"
-#include "canvas/Utilities/InputTag.h"
-#include "fhiclcpp/ParameterSet.h"
-#include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "TTree.h"
 
@@ -47,6 +40,13 @@ DEFINE_ART_MODULE(WorkshopAnalyzer)
 
 #include "art/Framework/Services/Optional/TFileService.h"
 
+#include "canvas/Persistency/Common/FindManyP.h"
+
+#include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/Track.h"
+
+#include "Pandora/PdgTable.h"
+
 namespace pandorafnalworkshop
 {
 
@@ -71,15 +71,13 @@ void WorkshopAnalyzer::analyze(art::Event const &event)
 {
     // Get the PFParticle collection
 
-    // Locate the neutrino
+    // Get mapping from ID to PFParticle
 
-    // Get the reconstructed neutrino final state PFParticles
+    // Find the daughters of the neutrino PFParticle
 
-    // Find the associated tracks
-   
+    // Count how many PFParticles have an associated track
+
     // Fill the tree
-    // TODO m_nTracks = ...
-    m_tree->Fill();
 }
 
 } // namespace pandorafnalworkshop 
