@@ -79,7 +79,7 @@ void WorkshopAnalyzerComplete::analyze(art::Event const &event)
     event.getByLabel(m_pandoraLabel, pfParticleHandle); 
 
     // Get mapping from ID to PFParticle
-    std::unordered_map<size_t, art::Ptr<recob::PFParticle> > pfParticleIdMap;
+    std::map<size_t, art::Ptr<recob::PFParticle> > pfParticleIdMap;
     for (unsigned int i = 0; i < pfParticleHandle->size(); ++i)
     {
         const art::Ptr<recob::PFParticle> pfParticle(pfParticleHandle, i);
