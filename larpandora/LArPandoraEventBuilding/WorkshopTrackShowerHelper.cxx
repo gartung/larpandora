@@ -22,7 +22,7 @@ float WorkshopTrackShowerHelper::GetTrackShowerScore(const art::Ptr<recob::PFPar
     /* TODO remove this block, it's only here so the code will compile while empty */
     (void) pfParticle;
     (void) pfParticleToMetadata;
-    return false;
+    return 0.f;
     /* End of block to remove */
 }
 
