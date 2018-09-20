@@ -1,5 +1,5 @@
-#ifndef WORKSHOP_TRACK_SHOWER_HELPER_H
-#define WOKRSHOP_TRACK_SHOWER_HELPER_H
+#ifndef WORKSHOP_TRACK_SHOWER_HELPER_COMPLETE_H
+#define WOKRSHOP_TRACK_SHOWER_HELPER_COMPLETE_H
 
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
@@ -9,7 +9,7 @@ namespace lar_pandora
 /**
  *  @brief  Helper class for track vs. shower separation in the Pandora FNAL workshop
  */
-class WorkshopTrackShowerHelper
+class WorkshopTrackShowerHelperComplete
 {
 public:
     /**
@@ -37,5 +37,5 @@ private:
 
 } // namespace larpandora
 
-#endif //  WORKSHOP_TRACK_SHOWER_HELPER_H
+#endif //  WORKSHOP_TRACK_SHOWER_HELPER_COMPLETE_H
 

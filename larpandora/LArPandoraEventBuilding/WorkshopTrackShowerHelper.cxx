@@ -1,29 +1,29 @@
 #include "larpandora/LArPandoraEventBuilding/WorkshopTrackShowerHelper.h"
 
+#include "larpandora/LArPandoraObjects/PFParticleMetadata.h"
+
 namespace lar_pandora
 {
 
-bool WorkshopTrackShowerHelper::IsTrack(const recob::PFParticle &pfParticle, const PFParticlesToMetadata &pfParticleToMetadata, const float minTrackScore)
+bool WorkshopTrackShowerHelper::IsTrack(const art::Ptr<recob::PFParticle> &pfParticle, const PFParticlesToMetadata &pfParticleToMetadata, const float minTrackScore)
 {
-    // ATTN the below are temporary so the template will compile whilst empty
-    // PLEASE DELETE
+    /* TODO remove this block, it's only here so the code will compile while empty */
     (void) pfParticle;
     (void) pfParticleToMetadata;
     (void) minTrackScore;
     return false;
-    // END DELETE
+    /* End of block to remove */
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------------
 
-float WorkshopTrackShowerHelper::GetTrackShowerScore(const recob::PFParticle &pfParticle, const PFParticlesToMetadata &pfParticleToMetadata)
+float WorkshopTrackShowerHelper::GetTrackShowerScore(const art::Ptr<recob::PFParticle> &pfParticle, const PFParticlesToMetadata &pfParticleToMetadata)
 {
-    // ATTN the below are temporary so the template will compile whilst empty
-    // PLEASE DELETE
+    /* TODO remove this block, it's only here so the code will compile while empty */
     (void) pfParticle;
     (void) pfParticleToMetadata;
-    return 0.f;
-    // END DELETE
+    return false;
+    /* End of block to remove */
 }
 
 } // namespace larpandora
