@@ -1,0 +1,22 @@
+BEGIN_PROLOG
+
+pandora_event_dump:
+{
+    module_type:  "LArPandoraEventDump"
+    PandoraLabel: "pandora"
+    TrackLabel:   "pandora"
+    ShowerLabel:  "pandora"
+}
+
+END_PROLOG
+
+process_name: PandoraEventDump
+
+physics.analyzers: {
+    dump: @local::pandora_event_dump
+}
+
+physics.dumpPath: [ dump ]
+physics.end_paths: [ dumpPath ]
+
+outputs: {}
