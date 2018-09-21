@@ -21,6 +21,7 @@
 #include "lardataobj/RecoBase/Seed.h"
 #include "lardataobj/RecoBase/PCAxis.h"
 #include "lardataobj/RecoBase/Hit.h"
+#include "lardataobj/RecoBase/TrackHitMeta.h"
 
 #include "larpandora/LArPandoraObjects/PFParticleMetadata.h"
 
@@ -49,6 +50,7 @@ private:
                        const art::FindManyP<recob::Track>                        &pfPartToTrackAssoc,
                        const art::FindManyP<recob::Shower>                       &pfPartToShowerAssoc,
                        const art::FindManyP<recob::PCAxis>                       &pfPartToPCAxisAssoc,
+                       const art::FindManyP<recob::Hit, recob::TrackHitMeta>     &trackToHitMetaAssoc,
                        const int                                                 depth);
 
     std::string m_PandoraLabel;
@@ -112,6 +114,8 @@ void LArPandoraEventDump::analyze(art::Event const & evt)
     art::FindManyP<recob::Track>                        pfPartToTrackAssoc(     pfParticleHandle, evt, m_TrackLabel);
     art::FindManyP<recob::Shower>                       pfPartToShowerAssoc(    pfParticleHandle, evt, m_ShowerLabel);
     art::FindManyP<recob::PCAxis>                       pfPartToPCAxisAssoc(    pfParticleHandle, evt, m_ShowerLabel);
+    
+    art::FindManyP<recob::Hit, recob::TrackHitMeta>     trackToHitMetaAssoc(trackHandle, evt, m_TrackLabel);
 
     art::FindManyP<recob::Hit> spacePointToHitAssoc(spacePointHandle, evt, m_PandoraLabel);
     art::FindManyP<recob::Hit> clusterToHitAssoc(   clusterHandle   , evt, m_PandoraLabel);
@@ -147,7 +151,7 @@ void LArPandoraEventDump::analyze(art::Event const & evt)
         if (part->IsPrimary())
         {
             this->PrintParticle(part, pfParticleIdMap, pfPartToSpacePointAssoc, pfPartToClusterAssoc, pfPartToVertexAssoc,
-                pfPartToMetadataAssoc, pfPartToTrackAssoc, pfPartToShowerAssoc, pfPartToPCAxisAssoc, 0);
+                pfPartToMetadataAssoc, pfPartToTrackAssoc, pfPartToShowerAssoc, pfPartToPCAxisAssoc, trackToHitMetaAssoc, 0);
         }
     }
 
@@ -165,6 +169,7 @@ void LArPandoraEventDump::PrintParticle(const art::Ptr< recob::PFParticle >     
                                         const art::FindManyP<recob::Track>                        &pfPartToTrackAssoc,   
                                         const art::FindManyP<recob::Shower>                       &pfPartToShowerAssoc,    
                                         const art::FindManyP<recob::PCAxis>                       &pfPartToPCAxisAssoc,
+                                        const art::FindManyP<recob::Hit, recob::TrackHitMeta>     &trackToHitMetaAssoc,
                                         const int                                                 depth) 
 {
     const int w(16);
@@ -204,6 +209,15 @@ void LArPandoraEventDump::PrintParticle(const art::Ptr< recob::PFParticle >     
     std::cout << indent << std::setw(w) << std::left << "- # Cluster"    << clusters.size()    << std::endl;
     std::cout << indent << std::setw(w) << std::left << "- # Vertex"     << vertices.size()    << std::endl;
     std::cout << indent << std::setw(w) << std::left << "- # Track"      << tracks.size()      << std::endl;
+
+    for (const auto &track : tracks)
+    {
+        const auto hitMetaAssoc = trackToHitMetaAssoc.data(track.key());
+        std::cout << indent << std::setw(w) << std::left << "  - Track " << track.key() << std::endl;
+        for (const auto &hitMeta : hitMetaAssoc)
+            std::cout << indent << std::setw(w) << std::left << "    - Hit " << hitMeta->Index() << std::endl;
+    }
+
     std::cout << indent << std::setw(w) << std::left << "- # Shower"     << showers.size()     << std::endl;
     std::cout << indent << std::setw(w) << std::left << "- # PCAxis"     << pcAxes.size()      << std::endl;
     std::cout << indent << std::setw(w) << std::left << "- # Metadata"   << metadata.size()    << std::endl;
@@ -222,7 +236,7 @@ void LArPandoraEventDump::PrintParticle(const art::Ptr< recob::PFParticle >     
     {
         art::Ptr< recob::PFParticle > daughter = pfParticleIdMap.at(daughterId);
         this->PrintParticle(daughter, pfParticleIdMap, pfPartToSpacePointAssoc, pfPartToClusterAssoc, pfPartToVertexAssoc,
-            pfPartToMetadataAssoc, pfPartToTrackAssoc, pfPartToShowerAssoc, pfPartToPCAxisAssoc, depth + 4);
+            pfPartToMetadataAssoc, pfPartToTrackAssoc, pfPartToShowerAssoc, pfPartToPCAxisAssoc, trackToHitMetaAssoc, depth + 4);
     }
 }
 
