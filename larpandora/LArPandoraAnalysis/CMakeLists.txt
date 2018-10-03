@@ -1,6 +1,4 @@
 
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-
 art_make( 
           
           LIB_LIBRARIES larcorealg_Geometry
@@ -22,7 +20,7 @@ art_make(
 			art_Utilities
                         canvas
 			${MF_MESSAGELOGGER}
-			${MF_UTILITIES}
+			
 	                ${FHICLCPP}
 			cetlib cetlib_except
                         ${Boost_SYSTEM_LIBRARY}

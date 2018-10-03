@@ -108,16 +108,39 @@ void LArPandoraTrackCreation::produce(art::Event &evt)
     std::unique_ptr< art::Assns<recob::Track, recob::Hit> > outputTracksToHits( new art::Assns<recob::Track, recob::Hit> );
     std::unique_ptr< art::Assns<recob::Track, recob::Hit, recob::TrackHitMeta> > outputTracksToHitsWithMeta( new art::Assns<recob::Track, recob::Hit, recob::TrackHitMeta> );
 
+    // 'wirePitchW` is here used only to provide length scale for binning hits and performing sliding/local linear fits.
+    // Fits should be robust against the precise choice, provided length scale is comparable to the granularity of the images.
     art::ServiceHandle<geo::Geometry> theGeometry;
-    const float wirePitchW((theGeometry->MaxPlanes() > 2) ? theGeometry->WirePitch(geo::kW) : 0.5f * (theGeometry->WirePitch(geo::kU) + theGeometry->WirePitch(geo::kV)));
+    const unsigned int nWirePlanes(theGeometry->MaxPlanes());
+
+    if (nWirePlanes > 3)
+        throw cet::exception("LArPandoraTrackCreation") << " LArPandoraTrackCreation::produce --- More than three wire planes present ";
+
+    if ((0 == theGeometry->Ncryostats()) || (0 == theGeometry->NTPC(0)))
+        throw cet::exception("LArPandoraTrackCreation") << " LArPandoraTrackCreation::produce --- unable to access first tpc in first cryostat ";
+
+    std::unordered_set<geo::_plane_proj> planeSet;
+    for (unsigned int iPlane = 0; iPlane < nWirePlanes; ++iPlane)
+        (void) planeSet.insert(theGeometry->TPC(0, 0).Plane(iPlane).View());
+
+    if ((nWirePlanes != planeSet.size()) || !planeSet.count(geo::kU) || !planeSet.count(geo::kV) || (planeSet.count(geo::kW) && planeSet.count(geo::kY)))
+        throw cet::exception("LArPandoraTrackCreation") << " LArPandoraTrackCreation::produce --- expect to find u and v views; if there is one further view, it must be w or y ";
+
+    const bool useYPlane((nWirePlanes > 2) && planeSet.count(geo::kY));
+
+    const float wirePitchU(theGeometry->WirePitch(geo::kU));
+    const float wirePitchV(theGeometry->WirePitch(geo::kV));
+    const float wirePitchW((nWirePlanes < 3) ? 0.5f * (wirePitchU + wirePitchV) : (useYPlane) ? theGeometry->WirePitch(geo::kY) : theGeometry->WirePitch(geo::kW));
 
     int trackCounter(0);
     const art::PtrMaker<recob::Track> makeTrackPtr(evt, *this);
 
     // Organise inputs
-    PFParticleVector pfParticleVector;
+    PFParticleVector pfParticleVector, extraPfParticleVector;
     PFParticlesToSpacePoints pfParticlesToSpacePoints;
+    PFParticlesToClusters pfParticlesToClusters;
     LArPandoraHelper::CollectPFParticles(evt, m_pfParticleLabel, pfParticleVector, pfParticlesToSpacePoints);
+    LArPandoraHelper::CollectPFParticles(evt, m_pfParticleLabel, extraPfParticleVector, pfParticlesToClusters);
 
     VertexVector vertexVector;
     PFParticlesToVertices pfParticlesToVertices;
@@ -135,6 +158,15 @@ void LArPandoraTrackCreation::produce(art::Event &evt)
         if (pfParticlesToSpacePoints.end() == particleToSpacePointIter)
         {
             mf::LogDebug("LArPandoraTrackCreation") << "No spacepoints associated to particle ";
+            continue;
+        }
+
+        // Obtain associated clusters
+        PFParticlesToClusters::const_iterator particleToClustersIter(pfParticlesToClusters.find(pPFParticle));
+
+        if (pfParticlesToClusters.end() == particleToClustersIter)
+        {
+            mf::LogDebug("LArPandoraShowerCreation") << "No clusters associated to particle ";
             continue;
         }
 
@@ -176,7 +208,7 @@ void LArPandoraTrackCreation::produce(art::Event &evt)
         }
 
         HitVector hitsInParticle;
-        LArPandoraHelper::GetAssociatedHits(evt, m_pfParticleLabel, particleToSpacePointIter->second, hitsInParticle, &indexVector);
+        LArPandoraHelper::GetAssociatedHits(evt, m_pfParticleLabel, particleToClustersIter->second, hitsInParticle);
 
         // Add invalid points at the end of the vector, so that the number of the trajectory points is the same as the number of hits
         if (trackStateVector.size()>hitsInParticle.size())

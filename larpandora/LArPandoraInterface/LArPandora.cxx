@@ -52,23 +52,27 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
     m_shouldRunNeutrinoRecoOption(pset.get<bool>("ShouldRunNeutrinoRecoOption")),
     m_shouldRunCosmicRecoOption(pset.get<bool>("ShouldRunCosmicRecoOption")),
     m_shouldPerformSliceId(pset.get<bool>("ShouldPerformSliceId")),
+    m_shouldProduceAllOutcomes(pset.get<bool>("ProduceAllOutcomes", false)),
     m_printOverallRecoStatus(pset.get<bool>("PrintOverallRecoStatus", false)),
     m_generatorModuleLabel(pset.get<std::string>("GeneratorModuleLabel", "")),
     m_geantModuleLabel(pset.get<std::string>("GeantModuleLabel", "largeant")),
     m_hitfinderModuleLabel(pset.get<std::string>("HitFinderModuleLabel")),
     m_backtrackerModuleLabel(pset.get<std::string>("BackTrackerModuleLabel","")),
+    m_allOutcomesInstanceLabel(pset.get<std::string>("AllOutcomesInstanceLabel", "allOutcomes")),
     m_enableProduction(pset.get<bool>("EnableProduction", true)),
     m_enableDetectorGaps(pset.get<bool>("EnableLineGaps", true)),
     m_enableMCParticles(pset.get<bool>("EnableMCParticles", false)),
     m_lineGapsCreated(false)
 {
     m_inputSettings.m_useHitWidths = pset.get<bool>("UseHitWidths", true);
+    m_inputSettings.m_useBirksCorrection = pset.get<bool>("UseBirksCorrection", false);
     m_inputSettings.m_uidOffset = pset.get<int>("UidOffset", 100000000);
     m_inputSettings.m_dx_cm = pset.get<double>("DefaultHitWidth", 0.5);
     m_inputSettings.m_int_cm = pset.get<double>("InteractionLength", 84.);
     m_inputSettings.m_rad_cm = pset.get<double>("RadiationLength", 14.);
-    m_inputSettings.m_dEdX_max = pset.get<double>("dEdXmax", 100000000.);
     m_inputSettings.m_dEdX_mip = pset.get<double>("dEdXmip", 2.);
+    m_inputSettings.m_mips_max = pset.get<double>("MipsMax", 50.);
+    m_inputSettings.m_mips_if_negative = pset.get<double>("MipsIfNegative", 0.);
     m_inputSettings.m_mips_to_gev = pset.get<double>("MipsToGeV", 3.5e-4);
     m_inputSettings.m_recombination_factor = pset.get<double>("RecombinationFactor", 0.63);
     m_outputSettings.m_pProducer = this;
@@ -76,21 +80,31 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
 
     if (m_enableProduction)
     {
-        produces< std::vector<recob::PFParticle> >();
-        produces< std::vector<recob::SpacePoint> >();
-        produces< std::vector<recob::Cluster> >();
-        produces< std::vector<recob::Vertex> >();
+        // Set up the instance names to produces
+        std::vector<std::string> instanceNames({""});
+        if (m_shouldProduceAllOutcomes)
+            instanceNames.push_back(m_allOutcomesInstanceLabel);
 
-        produces< art::Assns<recob::PFParticle, recob::SpacePoint> >();
-        produces< art::Assns<recob::PFParticle, recob::Cluster> >();
-        produces< art::Assns<recob::PFParticle, recob::Vertex> >();
-        produces< art::Assns<recob::SpacePoint, recob::Hit> >();
-        produces< art::Assns<recob::Cluster, recob::Hit> >();
-
-        if (m_outputSettings.m_shouldRunStitching)
+        for (const std::string &instanceName : instanceNames)
         {
-            produces< std::vector<anab::T0> >();
-            produces< art::Assns<recob::PFParticle, anab::T0> >();
+            produces< std::vector<recob::PFParticle> >(instanceName);
+            produces< std::vector<recob::SpacePoint> >(instanceName);
+            produces< std::vector<recob::Cluster> >(instanceName);
+            produces< std::vector<recob::Vertex> >(instanceName);
+            produces< std::vector<larpandoraobj::PFParticleMetadata> >(instanceName);
+
+            produces< art::Assns<recob::PFParticle, larpandoraobj::PFParticleMetadata> >(instanceName);
+            produces< art::Assns<recob::PFParticle, recob::SpacePoint> >(instanceName);
+            produces< art::Assns<recob::PFParticle, recob::Cluster> >(instanceName);
+            produces< art::Assns<recob::PFParticle, recob::Vertex> >(instanceName);
+            produces< art::Assns<recob::SpacePoint, recob::Hit> >(instanceName);
+            produces< art::Assns<recob::Cluster, recob::Hit> >(instanceName);
+
+            if (m_outputSettings.m_shouldRunStitching)
+            {
+                produces< std::vector<anab::T0> >(instanceName);
+                produces< art::Assns<recob::PFParticle, anab::T0> >(instanceName);
+            }
         }
     }
 }
@@ -194,7 +208,17 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
 void LArPandora::ProcessPandoraOutput(art::Event &evt, const IdToHitMap &idToHitMap)
 {
     if (m_enableProduction)
+    {
+        m_outputSettings.m_shouldProduceAllOutcomes = false;
         LArPandoraOutput::ProduceArtOutput(m_outputSettings, idToHitMap, evt);
+        
+        if (m_shouldProduceAllOutcomes)
+        {
+            m_outputSettings.m_shouldProduceAllOutcomes = true;
+            m_outputSettings.m_allOutcomesInstanceLabel = m_allOutcomesInstanceLabel;
+            LArPandoraOutput::ProduceArtOutput(m_outputSettings, idToHitMap, evt);
+        }
+    }
 }
 
 } // namespace lar_pandora

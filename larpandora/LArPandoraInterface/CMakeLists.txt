@@ -1,4 +1,3 @@
-include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
 include_directories( $ENV{PANDORA_INC} )
 include_directories( $ENV{LARPANDORACONTENT_INC} )
 
@@ -19,6 +18,7 @@ art_make(
                         ${PANDORASDK}
                         ${PANDORAMONITORING}
                         LArPandoraContent
+                        larpandoraobj
                         nusimdata_SimulationBase
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
@@ -31,7 +31,7 @@ art_make(
                         art_Utilities
                         canvas
                         ${MF_MESSAGELOGGER}
-                        ${MF_UTILITIES}
+                        
                         ${FHICLCPP}
                         cetlib cetlib_except
                         ${Boost_SYSTEM_LIBRARY}
