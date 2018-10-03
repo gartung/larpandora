@@ -289,11 +289,8 @@ void LArPandoraShowerCreationSBND::produce(art::Event &evt)
 	totalEnergy.push_back(fShowerEnergyAlg.ShowerEnergy(planeHitsMap[plane], plane));
 	//	std::map<int,std::vector<art::Ptr<recob::Hit> > > showerHits = fEMShowerAlg.OrderShowerHits(ShowerHitsVector, plane);
 	std::vector<art::Ptr<recob::Hit> > showerHits;
-	std::cout << "test1" << std::endl;
 	fEMShowerAlg.OrderShowerHits(planeHitsMap[plane],showerHits ,larvertex); 
-	std::cout << "test2" <<std::endl;
 	fEMShowerAlg.FindInitialTrackHits(showerHits, larvertex, initialTrackHits[plane]);
-	std::cout << "test3" <<std::endl;
 	showerHitsMap[plane] = showerHits;
       }
       else{
@@ -305,41 +302,31 @@ void LArPandoraShowerCreationSBND::produce(art::Event &evt)
 
     //The plane doesn't seem to matter anymore just set as 0. 
     fEMShowerAlg.FindInitialTrack(showerHitsMap,initialTrack,initialTrackHits,0);
-    std::cout << "test4" <<std::endl;
       for (std::map<int,std::vector<art::Ptr<recob::Hit > > >::iterator planeit = initialTrackHits.begin(); planeit !=initialTrackHits.end(); ++planeit){
-	std::cout << "test4.1" <<std::endl;
 	int trackhitsize = (planeit->second).size();
 	if(initialTrack){
 	if(planeHitsMap.find(planeit->first)!=planeHitsMap.end() || initialTrack==NULL ||trackhitsize<4){
-	  std::cout << "test4.2" <<std::endl;
 	  // Get the pitch                                                                                                                                                     
 	  double pitch = 0;
 	  double totalCharge = 0, totalDistance = 0, avHitTime = 0;
 	  unsigned int nHits = 0;
-	  std::cout << "test  (planeit->second).size(): " << (planeit->second).size() << std::endl;
 	  
 	  try{initialTrack->Length();}
 	  catch(...){std::cout << "Track failed to be born. Silly track." << std::endl;dEdx.push_back(0);continue;}
 	  try { pitch = lar::util::TrackPitchInView(*initialTrack, (planeit->second).at(0)->View()); }
 	  catch(...) { pitch = 0; }
-	  std::cout << "test 5.1" <<std::endl;
 
 	  for(std::vector<art::Ptr<recob::Hit > >::iterator trackHitIt = std::next(planeit->second.begin()); trackHitIt != planeit->second.end(); ++trackHitIt) {
 	  totalDistance += pitch;
-	  std::cout << "test 5.2" <<std::endl;
 	  totalCharge += (*trackHitIt)->Integral();
-	  std::cout << "test 5.3" <<std::endl;
 	  avHitTime += (*trackHitIt)->PeakTime();
 	  ++nHits;
 	}
 
-	  std::cout << "test 5.4" <<std::endl;
 	  avHitTime /= (double)nHits;
-	  std::cout << "test 6" <<std::endl;
 	  
 	  double dQdx = totalCharge / totalDistance;
 	  double dEdxval = fCalorimetryAlg.dEdx_AREA(dQdx, avHitTime, planeit->second.at(0)->WireID().Plane);
-	  std::cout << "test 7" << std::endl;
 	  dEdx.push_back(dEdxval);
 	}
 	else{
