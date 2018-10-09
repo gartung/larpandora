@@ -11,6 +11,7 @@
 #include "lardata/Utilities/AssociationUtil.h"
 
 #include "lardataobj/RecoBase/Cluster.h"
+#include "lardataobj/RecoBase/Slice.h"
 
 #include "larreco/RecoAlg/ClusterRecoUtil/ClusterParamsAlgBase.h"
 
@@ -40,15 +41,18 @@ public:
     typedef std::unique_ptr< std::vector<recob::SpacePoint> > SpacePointCollection;
     typedef std::unique_ptr< std::vector<anab::T0> > T0Collection;
     typedef std::unique_ptr< std::vector<larpandoraobj::PFParticleMetadata> > PFParticleMetadataCollection;
+    typedef std::unique_ptr< std::vector<recob::Slice> > SliceCollection;
 
     typedef std::unique_ptr< art::Assns<recob::PFParticle, larpandoraobj::PFParticleMetadata> > PFParticleToMetadataCollection;
     typedef std::unique_ptr< art::Assns<recob::PFParticle, recob::SpacePoint> > PFParticleToSpacePointCollection;
     typedef std::unique_ptr< art::Assns<recob::PFParticle, recob::Cluster> > PFParticleToClusterCollection;
     typedef std::unique_ptr< art::Assns<recob::PFParticle, recob::Vertex> > PFParticleToVertexCollection;
     typedef std::unique_ptr< art::Assns<recob::PFParticle, anab::T0> > PFParticleToT0Collection;
+    typedef std::unique_ptr< art::Assns<recob::PFParticle, recob::Slice> > PFParticleToSliceCollection;
 
     typedef std::unique_ptr< art::Assns<recob::Cluster, recob::Hit> > ClusterToHitCollection;
     typedef std::unique_ptr< art::Assns<recob::SpacePoint, recob::Hit> > SpacePointToHitCollection;
+    typedef std::unique_ptr< art::Assns<recob::Slice, recob::Hit> > SliceToHitCollection;
 
     /**
      *  @brief  Settings class
@@ -375,6 +379,10 @@ private:
      *  @return T0 relative to input hit in nanoseconds
      */
     static double CalculateT0(const art::Ptr<recob::Hit> hit, const pandora::CaloHit *const pCaloHit);
+
+    static void BuildSlices(const pandora::Pandora *const pPrimaryPandora, const art::Event &event, const art::EDProducer *const pProducer,
+        const std::string &instanceLabel, const pandora::PfoVector &pfoVector, const IdToHitMap &idToHitMap, SliceCollection &outputSlices,
+        PFParticleToSliceCollection &outputParticlesToSlices, SliceToHitCollection &outputSlicesToHits);
 
     /**
      *  @brief  Add an association between objects with two given ids

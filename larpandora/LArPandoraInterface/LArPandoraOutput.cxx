@@ -18,7 +18,9 @@
 #include "lardataobj/RecoBase/PFParticle.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Vertex.h"
+#include "lardataobj/RecoBase/Slice.h"
 #include "lardataobj/AnalysisBase/T0.h"
+
 
 #include "larcore/Geometry/Geometry.h"
 #include "lardata/DetectorInfoServices/DetectorClocksService.h"
@@ -58,6 +60,7 @@ void LArPandoraOutput::ProduceArtOutput(const Settings &settings, const IdToHitM
     SpacePointCollection            outputSpacePoints( new std::vector<recob::SpacePoint> );
     T0Collection                    outputT0s( new std::vector<anab::T0> );
     PFParticleMetadataCollection    outputParticleMetadata( new std::vector<larpandoraobj::PFParticleMetadata> );
+    SliceCollection                 outputSlices( new std::vector<recob::Slice> );
 
     // Set up the output associations
     PFParticleToMetadataCollection    outputParticlesToMetadata( new art::Assns<recob::PFParticle, larpandoraobj::PFParticleMetadata> );
@@ -65,8 +68,10 @@ void LArPandoraOutput::ProduceArtOutput(const Settings &settings, const IdToHitM
     PFParticleToClusterCollection     outputParticlesToClusters( new art::Assns<recob::PFParticle, recob::Cluster> );
     PFParticleToVertexCollection      outputParticlesToVertices( new art::Assns<recob::PFParticle, recob::Vertex> );
     PFParticleToT0Collection          outputParticlesToT0s( new art::Assns<recob::PFParticle, anab::T0> );
+    PFParticleToSliceCollection       outputParticlesToSlices( new art::Assns<recob::PFParticle, recob::Slice> );
     ClusterToHitCollection            outputClustersToHits( new art::Assns<recob::Cluster, recob::Hit> );
     SpacePointToHitCollection         outputSpacePointsToHits( new art::Assns<recob::SpacePoint, recob::Hit> );
+    SliceToHitCollection              outputSlicesToHits( new art::Assns<recob::Slice, recob::Hit> );
 
     // Collect immutable lists of pandora collections that we should convert to ART format
     const pandora::PfoVector pfoVector(settings.m_shouldProduceAllOutcomes ?
@@ -96,6 +101,7 @@ void LArPandoraOutput::ProduceArtOutput(const Settings &settings, const IdToHitM
     LArPandoraOutput::BuildPFParticles(evt, settings.m_pProducer, instanceLabel, pfoVector, pfoToVerticesMap, pfoToThreeDHitsMap, pfoToArtClustersMap, outputParticles, outputParticlesToVertices, outputParticlesToSpacePoints, outputParticlesToClusters);
 
     LArPandoraOutput::BuildParticleMetadata(evt, settings.m_pProducer, instanceLabel, pfoVector, outputParticleMetadata, outputParticlesToMetadata);
+    LArPandoraOutput::BuildSlices(settings.m_pPrimaryPandora, evt, settings.m_pProducer, instanceLabel, pfoVector, idToHitMap, outputSlices, outputParticlesToSlices, outputSlicesToHits);
 
     if (settings.m_shouldRunStitching)
         LArPandoraOutput::BuildT0s(evt, settings.m_pProducer, instanceLabel, pfoVector, outputT0s, pandoraHitToArtHitMap, outputParticlesToT0s);
@@ -106,13 +112,16 @@ void LArPandoraOutput::ProduceArtOutput(const Settings &settings, const IdToHitM
     evt.put(std::move(outputClusters), instanceLabel);
     evt.put(std::move(outputVertices), instanceLabel);
     evt.put(std::move(outputParticleMetadata), instanceLabel);
+    evt.put(std::move(outputSlices), instanceLabel);
 
     evt.put(std::move(outputParticlesToMetadata), instanceLabel);
     evt.put(std::move(outputParticlesToSpacePoints), instanceLabel);
     evt.put(std::move(outputParticlesToClusters), instanceLabel);
     evt.put(std::move(outputParticlesToVertices), instanceLabel);
+    evt.put(std::move(outputParticlesToSlices), instanceLabel);
     evt.put(std::move(outputSpacePointsToHits), instanceLabel);
     evt.put(std::move(outputClustersToHits), instanceLabel);
+    evt.put(std::move(outputSlicesToHits), instanceLabel);
 
     if (settings.m_shouldRunStitching)
     {
@@ -165,7 +174,7 @@ pandora::PfoVector LArPandoraOutput::CollectAllPfoOutcomes(const pandora::Pandor
     if (!pSlicingWorker || !pSliceNuWorker || !pSliceCRWorker)
         throw cet::exception("LArPandora") << " LArPandoraOutput::CollectAllPfoOutcomes--- Can't produce all outcomes for a non-consolidated pandora producer ";
 
-    // Collect slices under bothe reconstruction outcomes
+    // Collect slices under both reconstruction outcomes
     const pandora::PfoList *pSlicePfoList(nullptr);
     PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*pSlicingWorker, pSlicePfoList));
 
@@ -227,6 +236,83 @@ void LArPandoraOutput::CollectPfos(const pandora::PfoList &parentPfoList, pandor
 
     pfoVector.insert(pfoVector.end(), pfoList.begin(), pfoList.end());
     std::sort(pfoVector.begin(), pfoVector.end(), lar_content::LArPfoHelper::SortByNHits);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPandoraOutput::BuildSlices(const pandora::Pandora *const pPrimaryPandora, const art::Event &event,
+    const art::EDProducer *const pProducer, const std::string &instanceLabel, const pandora::PfoVector &pfoVector,
+    const IdToHitMap &idToHitMap, SliceCollection &outputSlices, PFParticleToSliceCollection &outputParticlesToSlices,
+    SliceToHitCollection &outputSlicesToHits)
+{
+    // Identify the pandora slicing worker by name
+    const pandora::Pandora *pSlicingWorker(nullptr);
+
+    for (const pandora::Pandora *const pPandora : MultiPandoraApi::GetDaughterPandoraInstanceList(pPrimaryPandora))
+    {
+        if (pPandora->GetName() != "SlicingWorker")
+            continue;
+        
+        if (pSlicingWorker)
+            throw cet::exception("LArPandora") << " LArPandoraOutput::BuildSlices --- multiple slice worker instances! ";
+
+        pSlicingWorker = pPandora;
+    }
+
+    if (!pSlicingWorker)
+        throw cet::exception("LArPandora") << " LArPandoraOutput::BuildSlices --- No slicing pandora instance found ";
+
+    // Get the slices - each PFO represents one slice 
+    const pandora::PfoList *pSlicePfoList(nullptr);
+    PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*pSlicingWorker, pSlicePfoList));
+
+    // No slices
+    if (!pSlicePfoList)
+        return;
+
+    // Define bogus values to fill the slice with
+    const float bogusFloat(std::numeric_limits<float>::max());
+    const recob::tracking::Point_t bogusPoint(bogusFloat, bogusFloat, bogusFloat);
+    const recob::tracking::Vector_t bogusVector(bogusFloat, bogusFloat, bogusFloat);
+   
+    unsigned int sliceIndex(0);
+    for (const pandora::ParticleFlowObject *const pSlicePfo : *pSlicePfoList)
+    {
+        // Add a new slice with bogus information
+        // ATTN here we enumerate from 1 to match the PFOs metadata! TODO consider changing everything to enumerate from zero
+        outputSlices->emplace_back(sliceIndex + 1, bogusPoint, bogusVector, bogusPoint, bogusPoint, bogusFloat, bogusFloat);
+
+        // Find the PFOs that were made from hits in this slice
+        for (unsigned int pfoIndex = 0; pfoIndex < pfoVector.size(); ++pfoIndex)
+        {
+            const pandora::ParticleFlowObject *const pPfo(pfoVector.at(pfoIndex));
+            const pandora::ParticleFlowObject *const pParent(lar_content::LArPfoHelper::GetParentPfo(pPfo));
+            const pandora::PropertiesMap &properties(pParent->GetPropertiesMap());
+
+            pandora::PropertiesMap::const_iterator it(properties.find("SliceIndex"));
+            if (it == properties.end())
+                continue;
+
+            if (static_cast<unsigned int>(std::round(it->second)) != sliceIndex)
+                continue;
+
+            LArPandoraOutput::AddAssociation(event, pProducer, instanceLabel, pfoIndex, sliceIndex, outputParticlesToSlices);
+        }
+
+        // Find the hits that are in the slice
+        // TODO determine if we need to also output isolated hits
+        pandora::CaloHitList hits;
+        lar_content::LArPfoHelper::GetCaloHits(pSlicePfo, pandora::TPC_VIEW_U, hits);
+        lar_content::LArPfoHelper::GetCaloHits(pSlicePfo, pandora::TPC_VIEW_V, hits);
+        lar_content::LArPfoHelper::GetCaloHits(pSlicePfo, pandora::TPC_VIEW_W, hits);
+        hits.sort(lar_content::LArClusterHelper::SortHitsByPosition);
+
+        // Add associations to the corresponding art hits
+        for (const pandora::CaloHit *const pCaloHit : hits)
+            LArPandoraOutput::AddAssociation(event, pProducer, instanceLabel, sliceIndex, {LArPandoraOutput::GetHit(idToHitMap, pCaloHit)}, outputSlicesToHits);
+
+        ++sliceIndex;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
