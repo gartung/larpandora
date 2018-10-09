@@ -279,8 +279,7 @@ void LArPandoraOutput::BuildSlices(const pandora::Pandora *const pPrimaryPandora
     for (const pandora::ParticleFlowObject *const pSlicePfo : *pSlicePfoList)
     {
         // Add a new slice with bogus information
-        // ATTN here we enumerate from 1 to match the PFOs metadata! TODO consider changing everything to enumerate from zero
-        outputSlices->emplace_back(sliceIndex + 1, bogusPoint, bogusVector, bogusPoint, bogusPoint, bogusFloat, bogusFloat);
+        outputSlices->emplace_back(sliceIndex, bogusPoint, bogusVector, bogusPoint, bogusPoint, bogusFloat, bogusFloat);
 
         // Find the PFOs that were made from hits in this slice
         for (unsigned int pfoIndex = 0; pfoIndex < pfoVector.size(); ++pfoIndex)
