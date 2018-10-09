@@ -384,6 +384,15 @@ private:
         const std::string &instanceLabel, const pandora::PfoVector &pfoVector, const IdToHitMap &idToHitMap, SliceCollection &outputSlices,
         PFParticleToSliceCollection &outputParticlesToSlices, SliceToHitCollection &outputSlicesToHits);
 
+    static void GetSlicePfos(const pandora::Pandora *const pPrimaryPandora, const pandora::PfoList *&pSlicePfoList);
+
+    static void AddAssociatedPfosWithSliceIndex(const art::Event &event, const art::EDProducer *const pProducer, const std::string &instanceLabel,
+        const pandora::PfoVector &pfoVector, const unsigned int sliceIndex, PFParticleToSliceCollection &outputParticlesToSlices);
+
+    static void AddAssociatedHitsWithSliceIndex(const art::Event &event, const art::EDProducer *const pProducer, const std::string &instanceLabel,
+        const pandora::ParticleFlowObject *const pSlicePfo, const unsigned int sliceIndex, const IdToHitMap &idToHitMap,
+        SliceToHitCollection &outputSlicesToHits);
+
     /**
      *  @brief  Add an association between objects with two given ids
      *
