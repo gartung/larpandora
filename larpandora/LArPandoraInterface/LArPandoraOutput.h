@@ -380,15 +380,55 @@ private:
      */
     static double CalculateT0(const art::Ptr<recob::Hit> hit, const pandora::CaloHit *const pCaloHit);
 
+    /**
+     *  @brief  Build slice objects and add them to the event
+     *
+     *  @param  pPrimaryPandora the primary pandora instance
+     *  @param  event the art event
+     *  @param  pProducer the producer making the slice
+     *  @param  instanceLabel the label of the producer instance
+     *  @param  pfoVector the input vector of all Pfos
+     *  @param  idToHitMap input mapping from pandora hit ID to ART hit
+     *  @param  outputSlices the output collection of slices to fill
+     *  @param  outputParticlesToSlices the output association from PFParticles to slices to fill
+     *  @param  outputSlicesToHits the output association from Slices to hits to fill
+     */
     static void BuildSlices(const pandora::Pandora *const pPrimaryPandora, const art::Event &event, const art::EDProducer *const pProducer,
         const std::string &instanceLabel, const pandora::PfoVector &pfoVector, const IdToHitMap &idToHitMap, SliceCollection &outputSlices,
         PFParticleToSliceCollection &outputParticlesToSlices, SliceToHitCollection &outputSlicesToHits);
 
+    /** 
+     *  @brief  Get the list of PFOs from the slicing pandora instsance. Each pfo represents one slice
+     *
+     *  @param  pPrimaryPandora the primary pandora instance
+     *  @param  pSlicePfoList the output list of slice pfos
+     */
     static void GetSlicePfos(const pandora::Pandora *const pPrimaryPandora, const pandora::PfoList *&pSlicePfoList);
 
+    /**
+     *  @brief  Add associations from Pfos to slices with a given slice index
+     *
+     *  @param  event the art event
+     *  @param  pProducer the producer making the association
+     *  @param  instanceLabel the label of the producer instance
+     *  @param  pfoVector the input vector of all pfos
+     *  @param  sliceIndex the input index of the slice with which to make associations to
+     *  @param  outputParticlesToSlices the output association from PFParticles to Slices
+     */
     static void AddAssociatedPfosWithSliceIndex(const art::Event &event, const art::EDProducer *const pProducer, const std::string &instanceLabel,
         const pandora::PfoVector &pfoVector, const unsigned int sliceIndex, PFParticleToSliceCollection &outputParticlesToSlices);
 
+    /**
+     *  @brief  Add associations from slices to hits with a given slice index
+     *
+     *  @param  event the art event
+     *  @param  pProducer the producer making the association
+     *  @param  instanceLabel the label of the producer instance
+     *  @param  pSlicePfo the pfo for the slice containing all of the hits in the slice
+     *  @param  sliceIndex the index of the slice pfo
+     *  @param  idToHitMap input mapping from pandora hit ID to ART hit
+     *  @param  outputSlicesToHitsMap the output association from Slices to Hits
+     */
     static void AddAssociatedHitsWithSliceIndex(const art::Event &event, const art::EDProducer *const pProducer, const std::string &instanceLabel,
         const pandora::ParticleFlowObject *const pSlicePfo, const unsigned int sliceIndex, const IdToHitMap &idToHitMap,
         SliceToHitCollection &outputSlicesToHits);
