@@ -17,7 +17,7 @@
 
 namespace anab {class CosmicTag; class T0;}
 namespace pandora {class ParticleFlowObject; class Vertex; typedef std::vector<int> IntVector;}
-namespace recob {class Cluster; class Hit; class PFParticle; class PFParticleMetadata; class Seed; class Shower; class SpacePoint; class Track; class Vertex; class Wire;}
+namespace recob {class Cluster; class Hit; class PFParticle; class PFParticleMetadata; class Seed; class Shower; class SpacePoint; class Track; class Vertex; class Wire; class Slice;}
 namespace sim {class SimChannel; struct TrackIDE;}
 namespace simb {class MCParticle; class MCTruth;}
 
