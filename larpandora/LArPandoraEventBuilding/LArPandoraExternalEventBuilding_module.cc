@@ -27,6 +27,8 @@
 
 #include "TTree.h"
 
+#include "TTree.h"
+
 namespace lar_pandora
 {
 
@@ -111,6 +113,15 @@ private:
      *  @return boolean - if the particle is a target
      */
     bool IsTarget(const art::Ptr<recob::PFParticleMetadata> &metadata) const;
+
+    /**
+     *  @brief  Query a metadata object to see if it is a target particle
+     *
+     *  @param  metadata the metadata object to query
+     *  
+     *  @return boolean - if the particle is a target
+     */
+    bool IsTarget(const art::Ptr<larpandoraobj::PFParticleMetadata> &metadata) const;
 
     std::string                         m_inputProducerLabel;  ///< Label for the Pandora instance that produced the collections we want to consolidated
     std::string                         m_trackProducerLabel;  ///< Label for the track producer using the Pandora instance that produced the collections we want to consolidate
@@ -401,7 +412,11 @@ void LArPandoraExternalEventBuilding::CollectConsolidatedParticles(const PFParti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 bool LArPandoraExternalEventBuilding::IsTarget(const art::Ptr<recob::PFParticleMetadata> &metadata) const
+=======
+bool LArPandoraExternalEventBuilding::IsTarget(const art::Ptr<larpandoraobj::PFParticleMetadata> &metadata) const
+>>>>>>> 82c35d8d1e6f62d8904861a1279ec42d832f5dd0
 {
     try
     {
