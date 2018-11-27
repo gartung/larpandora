@@ -359,8 +359,9 @@ public:
      *  @param evt the ART event record
      *  @param label the label for the truth information in the event
      *  @param simChannelVector output vector of SimChannel objects
+     *  @param overrideRealDataFlag flag for overriding event's isRealData() flag
      */
-    static void CollectSimChannels(const art::Event &evt, const std::string &label, SimChannelVector &simChannelVector);
+    static void CollectSimChannels(const art::Event &evt, const std::string &label, SimChannelVector &simChannelVector, bool overrideRealDataFlag=false);
 
     /**
      *  @brief Collect a vector of MCParticle objects from the ART event record
@@ -368,8 +369,9 @@ public:
      *  @param evt the ART event record
      *  @param label the label for the truth information in the event
      *  @param particleVector the output vector of MCParticle objects
+     *  @param overrideRealDataFlag flag for overriding event's isRealData() flag
      */
-    static void CollectMCParticles(const art::Event &evt, const std::string &label, MCParticleVector &particleVector);
+    static void CollectMCParticles(const art::Event &evt, const std::string &label, MCParticleVector &particleVector,  bool overrideRealDataFlag=false);
 
     /**
      *  @brief Collect a vector of MCParticle objects from the generator in the ART event record.  ATTN: This function is
@@ -378,8 +380,9 @@ public:
      *  @param evt the ART event record
      *  @param label the label for the truth information in the generator
      *  @param particleVector the output vector of MCParticle objects
+     *  @param overrideRealDataFlag flag for overriding event's isRealData() flag
      */
-    static void CollectGeneratorMCParticles(const art::Event &evt, const std::string &label, RawMCParticleVector &particleVector);
+    static void CollectGeneratorMCParticles(const art::Event &evt, const std::string &label, RawMCParticleVector &particleVector,  bool overrideRealDataFlag=false);
 
     /**
      *  @brief Collect truth information from the ART event record
@@ -388,9 +391,10 @@ public:
      *  @param label the label for the truth information in the event
      *  @param truthToParticles output map from MCTruth to MCParticle objects
      *  @param particlesToTruth output map from MCParticle to MCTruth objects
+     *  @param overrideRealDataFlag flag for overriding event's isRealData() flag
      */
     static void CollectMCParticles(const art::Event &evt, const std::string &label, MCTruthToMCParticles &truthToParticles,
-        MCParticlesToMCTruth &particlesToTruth);
+				   MCParticlesToMCTruth &particlesToTruth,  bool overrideRealDataFlag=false);
 
     /**
      *  @brief Collect the links from reconstructed hits to their true energy deposits
@@ -398,6 +402,7 @@ public:
      *  @param hitVector the input vector of reconstructed hits
      *  @param simChannelVector the input vector of SimChannels
      *  @param hitsToTrackIDEs the out map from hits to true energy deposits
+     *  @param overrideRealDataFlag flag for overriding event's isRealData() flag
      */
     static void BuildMCParticleHitMaps(const HitVector &hitVector, const SimChannelVector &simChannelVector, HitsToTrackIDEs &hitsToTrackIDEs);
 

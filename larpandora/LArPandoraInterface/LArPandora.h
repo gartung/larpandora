@@ -63,6 +63,7 @@ private:
     bool                            m_enableProduction;             ///< Whether to persist output products
     bool                            m_enableDetectorGaps;           ///< Whether to pass detector gap information to Pandora instances
     bool                            m_enableMCParticles;            ///< Whether to pass mc information to Pandora instances to aid development
+    bool                            m_overrideRealDataFlag;         ///< When looking at mc information, whether to ignore the isRealDataFlag (e.g. for overlays)
     bool                            m_lineGapsCreated;              ///< Book-keeping: whether line gap creation has been called
 
     LArPandoraInput::Settings       m_inputSettings;                ///< The lar pandora input settings
