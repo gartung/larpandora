@@ -1,0 +1,30 @@
+BEGIN_PROLOG
+MinTrackScore: 0.3
+my_pandoraTrackCreation:
+{
+ module_type: "LArPandoraTrackCreation"
+ PFParticleLabel: pandoraPatRec
+ MinTrackScore: @local::MinTrackScore
+}
+my_pandoraShowerCreation:
+{
+ module_type: "LArPandoraShowerCreation"
+ PFParticleLabel: pandoraPatRec
+ MinTrackScore: @local::MinTrackScore
+}
+END_PROLOG
+
+#include "reco_uboone_mcc9_8_driver_common.fcl"
+process_name: PandoraWorkshopTrackShower
+services.TFileService.fileName: "myTrackShowers_hist.root"
+# Set the producers to use
+physics.producers:
+{
+ myTracks: @local::my_pandoraTrackCreation
+ myShowers: @local::my_pandoraShowerCreation
+}
+# Run the producers
+physics.reco: [ myTracks, myShowers ]
+physics.trigger_paths: [ reco ]
+outputs.out1.fileName: "%ifb_%tc_myTrackShowers.root"
+outputs.out1.dataTier: "reconstructed"

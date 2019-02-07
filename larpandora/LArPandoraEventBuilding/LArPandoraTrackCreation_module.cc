@@ -14,7 +14,7 @@
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/TrackHitMeta.h"
-
+#include "larpandora/LArPandoraEventBuilding/WorkshopTrackShowerHelper.h"
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
 
 #include <memory>
@@ -47,6 +47,7 @@ private:
     unsigned int    m_minTrajectoryPoints;          ///< The minimum number of trajectory points
     unsigned int    m_slidingFitHalfWindow;         ///< The sliding fit half window
     bool            m_useAllParticles;              ///< Build a recob::Track for every recob::PFParticle
+    float           m_minTrackScore; 
 };
 
 DEFINE_ART_MODULE(LArPandoraTrackCreation)
@@ -88,7 +89,8 @@ LArPandoraTrackCreation::LArPandoraTrackCreation(fhicl::ParameterSet const &pset
     m_pfParticleLabel(pset.get<std::string>("PFParticleLabel")),
     m_minTrajectoryPoints(pset.get<unsigned int>("MinTrajectoryPoints", 2)),
     m_slidingFitHalfWindow(pset.get<unsigned int>("SlidingFitHalfWindow", 20)),
-    m_useAllParticles(pset.get<bool>("UseAllParticles", false))
+    m_useAllParticles(pset.get<bool>("UseAllParticles", false)),
+    m_minTrackScore(pset.get<float>("MinTrackScore", 0.5f))
 {
     produces< std::vector<recob::Track> >();
     produces< art::Assns<recob::PFParticle, recob::Track> >();
@@ -145,11 +147,15 @@ void LArPandoraTrackCreation::produce(art::Event &evt)
     VertexVector vertexVector;
     PFParticlesToVertices pfParticlesToVertices;
     LArPandoraHelper::CollectVertices(evt, m_pfParticleLabel, vertexVector, pfParticlesToVertices);
+    
+    PFParticleVector pfParticles;
+    PFParticlesToMetadata pfParticlesToMetadata;
+    LArPandoraHelper::CollectPFParticleMetadata(evt, m_pfParticleLabel, pfParticles, pfParticlesToMetadata);
 
     for (const art::Ptr<recob::PFParticle> pPFParticle : pfParticleVector)
     {
         // Select track-like pfparticles
-        if (!m_useAllParticles && !LArPandoraHelper::IsTrack(pPFParticle))
+        if (!m_useAllParticles && !WorkshopTrackShowerHelper::IsTrack(pPFParticle, pfParticlesToMetadata, m_minTrackScore))
             continue;
 
         // Obtain associated spacepoints
