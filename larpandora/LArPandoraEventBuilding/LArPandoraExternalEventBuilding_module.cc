@@ -142,6 +142,7 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
     produces< art::Assns<recob::PFParticle, recob::SpacePoint> >();
     produces< art::Assns<recob::PFParticle, recob::Cluster> >();
     produces< art::Assns<recob::PFParticle, recob::Vertex> >();
+    produces< art::Assns<recob::PFParticle, recob::Slice> >();
     produces< art::Assns<recob::PFParticle, recob::Track> >();
     produces< art::Assns<recob::PFParticle, recob::Shower> >();
     produces< art::Assns<recob::PFParticle, recob::PCAxis> >();
@@ -253,6 +254,7 @@ void LArPandoraExternalEventBuilding::CollectSlices(const PFParticleVector &allP
     std::map<unsigned int, float> nuScores;
     std::map<unsigned int, PFParticleVector> crHypotheses;
     std::map<unsigned int, PFParticleVector> nuHypotheses;
+    std::vector<unsigned int> usedSliceIds;
 
     // Collect the slice information
     for (const auto &part : allParticles)
@@ -274,8 +276,15 @@ void LArPandoraExternalEventBuilding::CollectSlices(const PFParticleVector &allP
 
         const unsigned int sliceId(static_cast<unsigned int>(std::round(this->GetMetadataValue(parentIt->second, "SliceIndex"))));
         const float nuScore(this->GetMetadataValue(parentIt->second, "NuScore"));
-        // ATTN all PFParticles in the same slice will have the same nuScore
-        nuScores[sliceId] = nuScore;
+
+        // Keep track of the slice IDs we have used, and their corresponding score
+        if (std::find(usedSliceIds.begin(), usedSliceIds.end(), sliceId) == usedSliceIds.end())
+        {
+            usedSliceIds.push_back(sliceId);
+        
+            // ATTN all PFParticles in the same slice will have the same nuScore
+            nuScores[sliceId] = nuScore;
+        }
 
         if (LArPandoraHelper::IsNeutrino(parentIt->first))
         {
@@ -287,13 +296,15 @@ void LArPandoraExternalEventBuilding::CollectSlices(const PFParticleVector &allP
         }
     }
 
+    // Sort the slice IDs to ensure reproducibility
+    std::sort(usedSliceIds.begin(), usedSliceIds.end());
+
     // ATTN: we need to ensure that for each slice there is a cosmic and neutrino hypothesis, even if the pass created no PFOs
     // in such a case we add an empty vector of pfparticles
     const PFParticleVector emptyPFParticleVector;
 
     // Produce the slices
-    // ATTN slice indices are enumerated from 1
-    for (unsigned int sliceId = 1; sliceId <= nuScores.size(); ++sliceId)
+    for (const unsigned int sliceId : usedSliceIds)
     {
         // Get the neutrino score
         const auto nuScoresIter(nuScores.find(sliceId));
