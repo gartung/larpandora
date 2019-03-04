@@ -41,7 +41,6 @@ public:
     LArPandoraExternalEventBuilding & operator = (LArPandoraExternalEventBuilding &&) = delete;
 
     void produce(art::Event &evt) override;
-    void endSubRun(art::SubRun &subrun);
 
 private:
     typedef std::map<art::Ptr<recob::PFParticle>, art::Ptr<larpandoraobj::PFParticleMetadata> > PFParticleToMetadata;
@@ -133,7 +132,6 @@ DEFINE_ART_MODULE(LArPandoraExternalEventBuilding)
 // implementation follows
 
 #include "Pandora/PdgTable.h"
-#include "larcoreobj/SummaryData/POTSummary.h"
 
 namespace lar_pandora
 {
@@ -194,8 +192,9 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
     m_pSubRunTree->Branch("run"   , &m_run   , "run/I");
     m_pSubRunTree->Branch("subRun", &m_subRun, "subRun/I");
     m_pSubRunTree->Branch("pot"   , &m_pot   , "pot/F");
-}
     */
+}
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPandoraExternalEventBuilding::produce(art::Event &evt)
