@@ -181,8 +181,8 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
         produces< std::vector<anab::T0> >();
         produces< art::Assns<recob::PFParticle, anab::T0> >();
     }
-
-    if (!m_shouldOutputSubrunsTree)
+    /*
+    if (!m_shouldOutpuSubrunsTree)
         return;
     
     if (m_isData)
@@ -195,7 +195,7 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
     m_pSubRunTree->Branch("subRun", &m_subRun, "subRun/I");
     m_pSubRunTree->Branch("pot"   , &m_pot   , "pot/F");
 }
-
+    */
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPandoraExternalEventBuilding::produce(art::Event &evt)
