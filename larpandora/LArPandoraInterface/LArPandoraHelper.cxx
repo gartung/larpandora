@@ -825,7 +825,9 @@ void LArPandoraHelper::CollectMCParticles(const art::Event &evt, const std::stri
     MCParticlesToMCTruth &particlesToTruth)
 {
     //if (evt.isRealData())
-      //  throw cet::exception("LArPandora") << " PandoraCollector::CollectMCParticles --- Trying to access MC truth from real data ";
+
+    //    throw cet::exception("LArPandora") << " PandoraCollector::CollectMCParticles --- Trying to access MC truth from real data ";
+
 
     art::Handle< RawMCParticleVector > theParticles;
     evt.getByLabel(label, theParticles);

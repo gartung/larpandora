@@ -122,13 +122,7 @@ private:
     bool                                m_useTestBeamMode;         ///< If we should expect a test-beam (instead of a neutrino) slice
     std::string                         m_targetKey;               ///< The metadata key for a PFParticle to determine if it is the target
     std::string                         m_scoreKey;                ///< The metadata key for the score of the target slice from Pandora
-    bool                                m_shouldOutputSubrunsTree; ///< If we should output the subrun information to tree
-    bool                                m_isData;                  ///< If this is a data event
-    std::string                         m_generatorLabel;          ///< The label of the generator for MC event POT counting
-    int                                 m_run;                     ///< The run number
-    int                                 m_subRun;                  ///< The subRun number
-    float                               m_pot;                     ///< The total amount of POT for the current sub run
-    TTree                              *m_pSubRunTree;             ///< The tree holding subrun information for POT counting of MC samples
+
 };
 
 DEFINE_ART_MODULE(LArPandoraExternalEventBuilding)
@@ -154,19 +148,14 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
     m_sliceIdTool(art::make_tool<SliceIdBaseTool>(pset.get<fhicl::ParameterSet>("SliceIdTool"))),
     m_useTestBeamMode(pset.get<bool>("ShouldUseTestBeamMode", false)),
     m_targetKey(m_useTestBeamMode ? "IsTestBeam" : "IsNeutrino"),
-    m_scoreKey(m_useTestBeamMode ? "TestBeamScore" : "NuScore"),
-    m_shouldOutputSubrunsTree(pset.get<bool>("ShouldOutputSubrunsTree", false)),
-    m_isData(m_shouldOutputSubrunsTree ? pset.get<bool>("IsData") : false),
-    m_generatorLabel(m_isData ? "" : pset.get<std::string>("GeneratorLabel")),
-    m_run(std::numeric_limits<unsigned int>::max()),
-    m_subRun(std::numeric_limits<unsigned int>::max()),
-    m_pot(-std::numeric_limits<float>::max()),
-    m_pSubRunTree(nullptr)
+    m_scoreKey(m_useTestBeamMode ? "TestBeamScore" : "NuScore")
+
 {
     produces< std::vector<recob::PFParticle> >();
     produces< std::vector<recob::SpacePoint> >();
     produces< std::vector<recob::Cluster> >();
     produces< std::vector<recob::Vertex> >();
+    produces< std::vector<recob::Slice> >();
     produces< std::vector<recob::Track> >(); 
     produces< std::vector<recob::Shower> >();
     produces< std::vector<recob::PCAxis> >();
@@ -175,15 +164,17 @@ LArPandoraExternalEventBuilding::LArPandoraExternalEventBuilding(fhicl::Paramete
     produces< art::Assns<recob::PFParticle, recob::SpacePoint> >();
     produces< art::Assns<recob::PFParticle, recob::Cluster> >();
     produces< art::Assns<recob::PFParticle, recob::Vertex> >();
+    produces< art::Assns<recob::PFParticle, recob::Slice> >();
     produces< art::Assns<recob::PFParticle, recob::Track> >();
     produces< art::Assns<recob::PFParticle, recob::Shower> >();
     produces< art::Assns<recob::PFParticle, recob::PCAxis> >();
     produces< art::Assns<recob::PFParticle, larpandoraobj::PFParticleMetadata> >();
-    produces< art::Assns<recob::Track, recob::Hit> >();
+    produces< art::Assns<recob::Track, recob::Hit, recob::TrackHitMeta> >();
     produces< art::Assns<recob::Shower, recob::Hit> >();
     produces< art::Assns<recob::Shower, recob::PCAxis> >();
     produces< art::Assns<recob::SpacePoint, recob::Hit> >();
     produces< art::Assns<recob::Cluster, recob::Hit> >();
+    produces< art::Assns<recob::Slice, recob::Hit> >();
 
     if (m_shouldProduceT0s)
     {
@@ -332,6 +323,7 @@ void LArPandoraExternalEventBuilding::CollectSlices(const PFParticleVector &allP
 
         if (this->IsTarget(parentIt->second))
         {
+
             targetHypotheses[sliceId].push_back(part);
         }
         else 
@@ -354,6 +346,7 @@ void LArPandoraExternalEventBuilding::CollectSlices(const PFParticleVector &allP
         const auto targetScoresIter(targetScores.find(sliceId));
         if (targetScoresIter == targetScores.end())
             throw cet::exception("LArPandoraExternalEventBuilding") << "Scrambled slice information - can't find target score with id = " << sliceId << std::endl;
+
 
         PFParticleVector targetPFParticleVector, crPFParticleVector;
 
@@ -415,28 +408,6 @@ bool LArPandoraExternalEventBuilding::IsTarget(const art::Ptr<larpandoraobj::PFP
     {
         return false;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-    
-void LArPandoraExternalEventBuilding::endSubRun(art::SubRun &subrun)
-{
-    if (!m_shouldOutputSubrunsTree)
-        return;
-
-    if (m_isData)
-        return;
-
-    if (!m_pSubRunTree)
-        throw cet::exception("LArPandora") << " LArPandoraExternalEventBuilding::endSubRun -- output tree not configured." << std::endl;
-
-    art::Handle<sumdata::POTSummary> potSummaryHandle;
-
-    m_run = subrun.run();
-    m_subRun = subrun.subRun();
-    m_pot = subrun.getByLabel(m_generatorLabel, potSummaryHandle) ? static_cast<float>(potSummaryHandle->totpot) : 0.f;
-    
-    m_pSubRunTree->Fill();  
 }
 
 } // namespace lar_pandora
