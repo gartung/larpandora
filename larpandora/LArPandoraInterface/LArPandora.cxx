@@ -56,6 +56,7 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
     m_printOverallRecoStatus(pset.get<bool>("PrintOverallRecoStatus", false)),
     m_generatorModuleLabel(pset.get<std::string>("GeneratorModuleLabel", "")),
     m_geantModuleLabel(pset.get<std::string>("GeantModuleLabel", "largeant")),
+    m_simChannelModuleLabel(pset.get<std::string>("SimChannelModuleLabel", m_geantModuleLabel)),
     m_hitfinderModuleLabel(pset.get<std::string>("HitFinderModuleLabel")),
     m_backtrackerModuleLabel(pset.get<std::string>("BackTrackerModuleLabel","")),
     m_allOutcomesInstanceLabel(pset.get<std::string>("AllOutcomesInstanceLabel", "allOutcomes")),
@@ -77,6 +78,8 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
     m_inputSettings.m_recombination_factor = pset.get<double>("RecombinationFactor", 0.63);
     m_outputSettings.m_pProducer = this;
     m_outputSettings.m_shouldRunStitching = m_shouldRunStitching;
+    m_outputSettings.m_isNeutrinoRecoOnlyNoSlicing = (!m_shouldRunSlicing && m_shouldRunNeutrinoRecoOption && !m_shouldRunCosmicRecoOption);
+    m_outputSettings.m_hitfinderModuleLabel = m_hitfinderModuleLabel;
 
     if (m_enableProduction)
     {
@@ -92,13 +95,16 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
             produces< std::vector<recob::Cluster> >(instanceName);
             produces< std::vector<recob::Vertex> >(instanceName);
             produces< std::vector<larpandoraobj::PFParticleMetadata> >(instanceName);
+            produces< std::vector<recob::Slice> >(instanceName);
 
             produces< art::Assns<recob::PFParticle, larpandoraobj::PFParticleMetadata> >(instanceName);
             produces< art::Assns<recob::PFParticle, recob::SpacePoint> >(instanceName);
             produces< art::Assns<recob::PFParticle, recob::Cluster> >(instanceName);
             produces< art::Assns<recob::PFParticle, recob::Vertex> >(instanceName);
+            produces< art::Assns<recob::PFParticle, recob::Slice> >(instanceName);
             produces< art::Assns<recob::SpacePoint, recob::Hit> >(instanceName);
             produces< art::Assns<recob::Cluster, recob::Hit> >(instanceName);
+            produces< art::Assns<recob::Slice, recob::Hit> >(instanceName);
 
             if (m_outputSettings.m_shouldRunStitching)
             {
@@ -180,7 +186,7 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
 
         LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCTruthToMCParticles, artMCParticlesToMCTruth);
 
-        LArPandoraHelper::CollectSimChannels(evt, m_geantModuleLabel, artSimChannels);
+        LArPandoraHelper::CollectSimChannels(evt, m_simChannelModuleLabel, artSimChannels);
         if (!artSimChannels.empty())
         {
             LArPandoraHelper::BuildMCParticleHitMaps(artHits, artSimChannels, artHitsToTrackIDEs);
@@ -188,7 +194,10 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
         else
         {
             if (m_backtrackerModuleLabel.empty())
-              throw cet::exception("LArPandora") << " LArPandora::CreatePandoraInput - no sim channels found, backtracker module must be set in FHiCL " << std::endl;
+            {
+              throw cet::exception("LArPandora") << "LArPandora::CreatePandoraInput - Can't build MCParticle to Hit map." << std::endl <<
+                  "No SimChannels found with label \"" << m_simChannelModuleLabel << "\", and BackTrackerModuleLabel isn't set in FHiCL." << std::endl;
+            }
 
             LArPandoraHelper::BuildMCParticleHitMaps(evt, m_hitfinderModuleLabel, m_backtrackerModuleLabel, artHitsToTrackIDEs);
         }

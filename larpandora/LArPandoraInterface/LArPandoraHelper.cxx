@@ -17,12 +17,14 @@
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/PFParticle.h"
+#include "lardataobj/RecoBase/PFParticleMetadata.h"
 #include "lardataobj/RecoBase/Seed.h"
 #include "lardataobj/RecoBase/Shower.h"
 #include "lardataobj/RecoBase/SpacePoint.h"
 #include "lardataobj/RecoBase/Track.h"
 #include "lardataobj/RecoBase/Vertex.h"
 #include "lardataobj/RecoBase/Wire.h"
+#include "lardataobj/RecoBase/Slice.h"
 #include "nusimdata/SimulationBase/MCParticle.h"
 #include "nusimdata/SimulationBase/MCTruth.h"
 
@@ -35,7 +37,6 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
-#include "larpandora/LArPandoraObjects/PFParticleMetadata.h"
 
 #include <limits>
 #include <iostream>
@@ -1066,6 +1067,9 @@ void LArPandoraHelper::GetAssociatedHits(const art::Event &evt, const std::strin
 
     if (indexVector != nullptr)
     {
+        if (inputVector.size() != indexVector->size())
+            throw cet::exception("LArPandora") << " PandoraHelper::GetAssociatedHits --- trying to use an index vector not matching input vector";
+
         // If indexVector is filled, sort hits according to trajectory points order
         for (int index : (*indexVector))
         {
@@ -1073,7 +1077,9 @@ void LArPandoraHelper::GetAssociatedHits(const art::Event &evt, const std::strin
             const HitVector &hits = hitAssoc.at(element.key());
             associatedHits.insert(associatedHits.end(), hits.begin(), hits.end());
         }
-    } else {
+    }
+    else
+    {
         // If indexVector is empty just loop through inputSpacePoints
         for (const art::Ptr<T> &element : inputVector)
         {
@@ -1090,6 +1096,7 @@ void LArPandoraHelper::BuildMCParticleMap(const MCParticleVector &particleVector
     for (MCParticleVector::const_iterator iter = particleVector.begin(), iterEnd = particleVector.end(); iter != iterEnd; ++iter)
     {
         const art::Ptr<simb::MCParticle> particle = *iter;
+        particleMap[particle->TrackId()] = particle;
         particleMap[particle->TrackId()] = particle;
     }
 }
@@ -1370,6 +1377,13 @@ bool LArPandoraHelper::IsVisible(const art::Ptr<simb::MCParticle> particle)
     // TODO: What about ions, neutrons, photons? (Have included neutrons and photons for now)
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+larpandoraobj::PFParticleMetadata LArPandoraHelper::GetPFParticleMetadata(const pandora::ParticleFlowObject *const pPfo)
+{
+	return larpandoraobj::PFParticleMetadata(pPfo->GetPropertiesMap());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
