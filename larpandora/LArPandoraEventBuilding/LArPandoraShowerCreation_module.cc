@@ -17,6 +17,7 @@
 
 #include "larreco/Calorimetry/LinearEnergyAlg.h"
 
+#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
 
 #include <memory>
@@ -44,7 +45,7 @@ private:
      *  @param  larShowerPCA the lar shower pca parameters extracted from pandora
      *  @param  vertexPosition the shower vertex position
      */
-    recob::Shower BuildShower(const int id, const lar_content::LArShowerPCA &larShowerPCA, const pandora::CartesianVector &vertexPosition) const;
+    recob::Shower BuildShower(const int id, const lar_content::LArShowerPCA &larShowerPCA, const pandora::CartesianVector &vertexPosition, const ClusterVector &cluster, const art::Assns< recob::Cluster, recob::Hit > &clusterToHitAssns) const;
 
     /**
      *  @brief  Build a recob::PCAxis object
@@ -59,6 +60,7 @@ private:
     // TODO When implementation lived in LArPandoraOutput, it contained key building blocks for calculation of shower energies per plane.
     // Now functionality has moved to separate module, will require reimplementation (was deeply embedded in LArPandoraOutput structure).
     // const calo::LinearEnergyAlg    *m_pShowerEnergyAlg;       ///< The address of the shower energy algorithm
+    std::unique_ptr< calo::LinearEnergyAlg > m_showerEnergyAlg;   ///< Optional cluster energy algorithm.
 };
 
 DEFINE_ART_MODULE(LArPandoraShowerCreation)
@@ -77,6 +79,8 @@ DEFINE_ART_MODULE(LArPandoraShowerCreation)
 #include "canvas/Utilities/InputTag.h"
 
 #include "larcore/Geometry/Geometry.h"
+#include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 
 #include "lardata/Utilities/AssociationUtil.h"
 
@@ -90,7 +94,6 @@ DEFINE_ART_MODULE(LArPandoraShowerCreation)
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandora/LArPandoraInterface/LArPandoraHelper.h"
 
 #include <iostream>
 
@@ -100,7 +103,9 @@ namespace lar_pandora
 LArPandoraShowerCreation::LArPandoraShowerCreation(fhicl::ParameterSet const &pset) :
     EDProducer{pset},
     m_pfParticleLabel(pset.get<std::string>("PFParticleLabel")),
-    m_useAllParticles(pset.get<bool>("UseAllParticles", false))
+    m_useAllParticles(pset.get<bool>("UseAllParticles", false)),
+    m_showerEnergyAlg(nullptr)
+    
 {
     produces< std::vector<recob::Shower> >();
     produces< std::vector<recob::PCAxis> >();
@@ -108,12 +113,29 @@ LArPandoraShowerCreation::LArPandoraShowerCreation(fhicl::ParameterSet const &ps
     produces< art::Assns<recob::PFParticle, recob::PCAxis> >();
     produces< art::Assns<recob::Shower, recob::Hit> >();
     produces< art::Assns<recob::Shower, recob::PCAxis> >();
+    
+    if (pset.has_key("ShowerEnergy") && pset.is_key_to_table("ShowerEnergy"))
+    {
+        m_showerEnergyAlg = std::make_unique<calo::LinearEnergyAlg>(pset.get<fhicl::ParameterSet>("ShowerEnergy"));
+    }
+    else mf::LogWarning("LArPandoraShowerCreation") << "No shower energy calibration set up.";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPandoraShowerCreation::produce(art::Event &evt)
 {
+  
+    // we set up the algorithm on each new event, in case the services have changed:
+    if (m_showerEnergyAlg)
+    {
+        m_showerEnergyAlg->setup(
+            *(lar::providerFrom<detinfo::DetectorPropertiesService>()),
+            *(lar::providerFrom<detinfo::DetectorClocksService>()),
+            *(lar::providerFrom<geo::Geometry>())
+            );
+    } // if
+  
     std::unique_ptr< std::vector<recob::Shower> > outputShowers( new std::vector<recob::Shower> );
     std::unique_ptr< std::vector<recob::PCAxis> > outputPCAxes( new std::vector<recob::PCAxis> );
     std::unique_ptr< art::Assns<recob::PFParticle, recob::Shower> > outputParticlesToShowers( new art::Assns<recob::PFParticle, recob::Shower> );
@@ -130,9 +152,13 @@ void LArPandoraShowerCreation::produce(art::Event &evt)
     PFParticleVector pfParticleVector, extraPfParticleVector;
     PFParticlesToSpacePoints pfParticlesToSpacePoints;
     PFParticlesToClusters pfParticlesToClusters;
+    ClusterVector clusterVector;
+    ClustersToHits clustersToHits;
     LArPandoraHelper::CollectPFParticles(evt, m_pfParticleLabel, pfParticleVector, pfParticlesToSpacePoints);
     LArPandoraHelper::CollectPFParticles(evt, m_pfParticleLabel, extraPfParticleVector, pfParticlesToClusters);
-
+    LArPandoraHelper::CollectClusters(evt, m_pfParticleLabel, clusterVector, clustersToHits);
+    evt.getValidHandle< art::Assn< recob::Cluster, recob::Hit > > const& clusterToHitAssns(m_pfParticleLabel);
+    
     VertexVector vertexVector;
     PFParticlesToVertices pfParticlesToVertices;
     LArPandoraHelper::CollectVertices(evt, m_pfParticleLabel, vertexVector, pfParticlesToVertices);
@@ -160,6 +186,7 @@ void LArPandoraShowerCreation::produce(art::Event &evt)
             mf::LogDebug("LArPandoraShowerCreation") << "No clusters associated to particle ";
             continue;
         }
+        const ClusterVector &clusters = particleToClustersIter->second;
 
         // Obtain associated vertex
         PFParticlesToVertices::const_iterator particleToVertexIter(pfParticlesToVertices.find(pPFParticle));
@@ -179,12 +206,14 @@ void LArPandoraShowerCreation::produce(art::Event &evt)
         particleToVertexIter->second.front()->XYZ(vertexXYZ);
         const pandora::CartesianVector vertexPosition(vertexXYZ[0], vertexXYZ[1], vertexXYZ[2]);
 
+
         // Call pandora "fast" shower fitter
+        // Am I being Eric Church?
         try
         {
             // Ensure successful creation of all structures before placing results in output containers
             const lar_content::LArShowerPCA larShowerPCA(lar_content::LArPfoHelper::GetPrincipalComponents(cartesianPointVector, vertexPosition));
-            const recob::Shower shower(LArPandoraShowerCreation::BuildShower(showerCounter++, larShowerPCA, vertexPosition));
+            const recob::Shower shower(LArPandoraShowerCreation::BuildShower(showerCounter++, larShowerPCA, vertexPosition, clusters, clusterToHitAssns));
             const recob::PCAxis pcAxis(LArPandoraShowerCreation::BuildPCAxis(larShowerPCA));
             outputShowers->emplace_back(shower);
             outputPCAxes->emplace_back(pcAxis);
@@ -194,6 +223,7 @@ void LArPandoraShowerCreation::produce(art::Event &evt)
             mf::LogDebug("LArPandoraShowerCreation") << "Unable to extract shower pca";
             continue;
         }
+
 
         // Output objects
         art::Ptr<recob::Shower> pShower(makeShowerPtr(outputShowers->size() - 1));
@@ -222,7 +252,7 @@ void LArPandoraShowerCreation::produce(art::Event &evt)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-recob::Shower LArPandoraShowerCreation::BuildShower(const int id, const lar_content::LArShowerPCA &larShowerPCA, const pandora::CartesianVector &vertexPosition) const
+recob::Shower LArPandoraShowerCreation::BuildShower(const int id, const lar_content::LArShowerPCA &larShowerPCA, const pandora::CartesianVector &vertexPosition, const ClusterVector &cluster, const art::Assns< recob::Cluster, recob::Hit > &clusterToHitAssns ) const
 {
     const pandora::CartesianVector &showerLength(larShowerPCA.GetAxisLengths());
     const pandora::CartesianVector &showerDirection(larShowerPCA.GetPrimaryAxis());
@@ -232,13 +262,15 @@ recob::Shower LArPandoraShowerCreation::BuildShower(const int id, const lar_cont
     const TVector3 direction(showerDirection.GetX(), showerDirection.GetY(), showerDirection.GetZ());
     const TVector3 vertex(vertexPosition.GetX(), vertexPosition.GetY(), vertexPosition.GetZ());
 
+    // Shower energy
+    const std::vector< double > totalEnergy = m_showerEnergyAlg->CalculateEnergy( cluster, clusterToHitAssns );        
+
     // TODO
     const TVector3 directionErr;
     const TVector3 vertexErr;
     const std::vector<double> totalEnergyErr;
     const std::vector<double> dEdx;
     const std::vector<double> dEdxErr;
-    const std::vector<double> totalEnergy;
     const int bestplane(0);
 
     return recob::Shower(direction, directionErr, vertex, vertexErr, totalEnergy, totalEnergyErr, dEdx, dEdxErr, bestplane, id, length, openingAngle);
