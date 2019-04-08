@@ -1,11 +1,8 @@
 include_directories( $ENV{PANDORA_INC} )
 include_directories( $ENV{LARPANDORACONTENT_INC} )
 
-add_subdirectory(SliceIdTools)
-add_subdirectory(fcl)
-
-art_make( 
-          LIB_LIBRARIES larcorealg_Geometry
+set( 
+          sliceid_tool_lib_list larcorealg_Geometry
                         larcore_Geometry_Geometry_service
                         larsim_Simulation lardataobj_Simulation
                         lardataobj_RawData
@@ -21,6 +18,7 @@ art_make(
                         ${PANDORAMONITORING}
                         LArPandoraContent
                         larpandora_LArPandoraInterface
+                        larpandora_LArPandoraEventBuilding
                         nusimdata_SimulationBase
                         ${ART_FRAMEWORK_CORE}
                         ${ART_FRAMEWORK_PRINCIPAL}
@@ -40,8 +38,10 @@ art_make(
                         ${ROOT_GEOM}
                         ${ROOT_BASIC_LIB_LIST}
                         ${ROOT_GENVECTOR}
-            MODULE_LIBRARIES larpandora_LArPandoraEventBuilding
+                        MODULE_LIBRARIES larpandora_LArPandoraEventBuilding
           )
+
+art_make(TOOL_LIBRARIES ${sliceid_tool_lib_list})
 
 install_headers()
 install_fhicl()
