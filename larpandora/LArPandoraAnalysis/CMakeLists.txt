@@ -19,10 +19,9 @@ art_make(
                         art_Utilities
                         canvas
                         ${MF_MESSAGELOGGER}
-
                         ${FHICLCPP}
                         cetlib cetlib_except
-                        ${ROOT_BASIC_LIB_LIST}
+                        ${ROOT_LIBRARIES}
            MODULE_LIBRARIES larpandora_LArPandoraInterface
           )
 

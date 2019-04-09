@@ -1,5 +1,7 @@
-include_directories( $ENV{PANDORA_INC} )
-include_directories( $ENV{LARPANDORACONTENT_INC} )
+include_directories( ${PandoraSDK_INCLUDE_DIRS} )
+include_directories( ${PandoraMonitoring_INCLUDE_DIRS} )
+include_directories( ${EIGEN3_INCLUDE_DIRS} )
+include_directories( ${LArPandoraContent_INCLUDE_DIRS} )
 
 art_make(
           LIB_LIBRARIES larcorealg_Geometry
@@ -14,8 +16,8 @@ art_make(
                         larreco_RecoAlg
                         larreco_ClusterFinder
                         larreco_Calorimetry
-                        ${PANDORASDK}
-                        ${PANDORAMONITORING}
+                        ${PandoraSDK_LIBRARIES}
+                        ${PandoraMonitoring_LIBRARIES}
                         LArPandoraContent
                         larpandora_LArPandoraInterface
                         nusimdata_SimulationBase
