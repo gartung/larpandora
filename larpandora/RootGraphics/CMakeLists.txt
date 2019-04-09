@@ -12,9 +12,9 @@ cet_set_compiler_flags(EXTRA_CXX_FLAGS -Wno-variadic-macros)
 art_make_library( LIBRARY_NAME larpandora_RootGraphicsEnabler
                   SOURCE RootGraphicsEnabler.cxx 
                   LIBRARIES
-                    ${ROOT_CORE}
-                    ${ROOT_GX11}
-                    ${ROOT_GUI}
+                    ${ROOT_Core_LIBRARY}
+                    ${ROOT_GX11_LIBRARY}
+                    ${ROOT_Gui_LIBRARY}
                 )
 art_make(
           EXCLUDE RootGraphicsEnabler.cxx 
