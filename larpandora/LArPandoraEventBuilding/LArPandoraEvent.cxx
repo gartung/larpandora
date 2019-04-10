@@ -108,15 +108,15 @@ void LArPandoraEvent::WriteToEvent() const
 void LArPandoraEvent::GetCollections()
 {
     this->GetCollection(Labels::PFParticleLabel, m_pfParticles);
-    this->GetCollection(Labels::SpacePointLabel, m_spacePoints); 
-    this->GetCollection(Labels::ClusterLabel, m_clusters); 
-    this->GetCollection(Labels::VertexLabel, m_vertices); 
-    this->GetCollection(Labels::SliceLabel, m_slices); 
-    this->GetCollection(Labels::TrackLabel, m_tracks); 
-    this->GetCollection(Labels::ShowerLabel, m_showers); 
-    this->GetCollection(Labels::PCAxisLabel, m_pcAxes); 
-    this->GetCollection(Labels::PFParticleMetadataLabel, m_metadata); 
-    this->GetCollection(Labels::HitLabel, m_hits); 
+    this->GetCollection(Labels::SpacePointLabel, m_spacePoints);
+    this->GetCollection(Labels::ClusterLabel, m_clusters);
+    this->GetCollection(Labels::VertexLabel, m_vertices);
+    this->GetCollection(Labels::SliceLabel, m_slices);
+    this->GetCollection(Labels::TrackLabel, m_tracks);
+    this->GetCollection(Labels::ShowerLabel, m_showers);
+    this->GetCollection(Labels::PCAxisLabel, m_pcAxes);
+    this->GetCollection(Labels::PFParticleMetadataLabel, m_metadata);
+    this->GetCollection(Labels::HitLabel, m_hits);
 
     this->GetAssociationMap(m_pfParticles, Labels::PFParticleToSpacePointLabel, m_pfParticleSpacePointMap);
     this->GetAssociationMap(m_pfParticles, Labels::PFParticleToClusterLabel, m_pfParticleClusterMap);
