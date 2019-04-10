@@ -64,6 +64,7 @@ private:
     bool                            m_enableDetectorGaps;           ///< Whether to pass detector gap information to Pandora instances
     bool                            m_enableMCParticles;            ///< Whether to pass mc information to Pandora instances to aid development
     bool                            m_lineGapsCreated;              ///< Book-keeping: whether line gap creation has been called
+    bool                            m_overrideIsRealDataCheck;      ///< Override the check that we are not looking at real data when accessing MC-only quantities
 
     LArPandoraInput::Settings       m_inputSettings;                ///< The lar pandora input settings
     LArPandoraOutput::Settings      m_outputSettings;               ///< The lar pandora output settings

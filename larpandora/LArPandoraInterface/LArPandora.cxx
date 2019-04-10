@@ -63,7 +63,8 @@ LArPandora::LArPandora(fhicl::ParameterSet const &pset) :
     m_enableProduction(pset.get<bool>("EnableProduction", true)),
     m_enableDetectorGaps(pset.get<bool>("EnableLineGaps", true)),
     m_enableMCParticles(pset.get<bool>("EnableMCParticles", false)),
-    m_lineGapsCreated(false)
+    m_lineGapsCreated(false),
+    m_overrideIsRealDataCheck(pset.get<bool>("OverrideIsRealDataCheck", false))
 {
     m_inputSettings.m_useHitWidths = pset.get<bool>("UseHitWidths", true);
     m_inputSettings.m_useBirksCorrection = pset.get<bool>("UseBirksCorrection", false);
@@ -179,14 +180,14 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
 
     if (m_enableMCParticles && !evt.isRealData())
     {
-        LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCParticleVector);
+        LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCParticleVector, m_overrideIsRealDataCheck);
 
         if (!m_generatorModuleLabel.empty())
-            LArPandoraHelper::CollectGeneratorMCParticles(evt, m_generatorModuleLabel, generatorArtMCParticleVector);
+            LArPandoraHelper::CollectGeneratorMCParticles(evt, m_generatorModuleLabel, generatorArtMCParticleVector, m_overrideIsRealDataCheck);
 
-        LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCTruthToMCParticles, artMCParticlesToMCTruth);
+        LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCTruthToMCParticles, artMCParticlesToMCTruth, m_overrideIsRealDataCheck);
 
-        LArPandoraHelper::CollectSimChannels(evt, m_simChannelModuleLabel, artSimChannels);
+        LArPandoraHelper::CollectSimChannels(evt, m_simChannelModuleLabel, artSimChannels, m_overrideIsRealDataCheck);
         if (!artSimChannels.empty())
         {
             LArPandoraHelper::BuildMCParticleHitMaps(artHits, artSimChannels, artHitsToTrackIDEs);
