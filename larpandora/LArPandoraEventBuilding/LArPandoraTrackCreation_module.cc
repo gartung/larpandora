@@ -262,7 +262,7 @@ void LArPandoraTrackCreation::produce(art::Event &evt)
         for (unsigned int hitIndex = 0; hitIndex < hitsInParticle.size(); hitIndex++)
         {
             const art::Ptr<recob::Hit> pHit(hitsInParticle.at(hitIndex));
-            const int index((hitIndex < hitsFromSpacePoints.size()) ? hitIndex : std::numeric_limits<int>::max());
+            const unsigned int index((hitIndex < hitsFromSpacePoints.size()) ? hitIndex : std::numeric_limits<int>::max());
             recob::TrackHitMeta metadata(index, -std::numeric_limits<double>::max());
             outputTracksToHitsWithMeta->addSingle(pTrack, pHit, metadata);
         }
