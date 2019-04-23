@@ -119,8 +119,8 @@ DEFINE_ART_MODULE(PFParticleAnalysis)
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Framework/Services/Optional/TFileService.h"
-#include "art/Framework/Services/Optional/TFileDirectory.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "lardataobj/RecoBase/PFParticle.h"
@@ -164,7 +164,7 @@ void PFParticleAnalysis::beginJob()
     mf::LogDebug("LArPandora") << " *** PFParticleAnalysis::beginJob() *** " << std::endl;
 
     //
-    art::ServiceHandle<art::TFileService> tfs;
+    art::ServiceHandle<art::TFileService const> tfs;
 
     m_pRecoTree = tfs->make<TTree>("pandora", "LAr PFParticles");
     m_pRecoTree->Branch("run", &m_run, "run/I");

@@ -6,7 +6,7 @@
  */
 
 #include "art/Framework/Principal/Event.h"
-#include "art/Framework/Services/Optional/TFileService.h"
+#include "art_root_io/TFileService.h"
 #include "cetlib/cpu_timer.h"
 
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
@@ -220,7 +220,7 @@ void LArPandora::ProcessPandoraOutput(art::Event &evt, const IdToHitMap &idToHit
     {
         m_outputSettings.m_shouldProduceAllOutcomes = false;
         LArPandoraOutput::ProduceArtOutput(m_outputSettings, idToHitMap, evt);
-        
+
         if (m_shouldProduceAllOutcomes)
         {
             m_outputSettings.m_shouldProduceAllOutcomes = true;

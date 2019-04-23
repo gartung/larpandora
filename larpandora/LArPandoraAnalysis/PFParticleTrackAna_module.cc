@@ -24,7 +24,7 @@ class PFParticleTrackAna : public art::EDAnalyzer
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  pset
      */
      PFParticleTrackAna(fhicl::ParameterSet const &pset);
@@ -41,21 +41,21 @@ public:
 
 private:
 
-     TTree       *m_pCaloTree;              ///< 
+     TTree       *m_pCaloTree;              ///<
 
-     int          m_run;                    ///< 
-     int          m_event;                  ///< 
+     int          m_run;                    ///<
+     int          m_event;                  ///<
      int          m_index;                  ///<
      int          m_ntracks;                ///<
      int          m_trkid;                  ///<
      int          m_plane;                  ///<
-     
+
      double       m_length;                 ///<
      double       m_dEdx;                   ///<
      double       m_dNdx;                   ///<
      double       m_dQdx;                   ///<
      double       m_residualRange;          ///<
-     
+
      double       m_x;                      ///<
      double       m_y;                      ///<
      double       m_z;                      ///<
@@ -80,8 +80,8 @@ DEFINE_ART_MODULE(PFParticleTrackAna)
 #include "fhiclcpp/ParameterSet.h"
 #include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
-#include "art/Framework/Services/Optional/TFileService.h"
-#include "art/Framework/Services/Optional/TFileDirectory.h"
+#include "art_root_io/TFileService.h"
+#include "art_root_io/TFileDirectory.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
 #include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Persistency/Common/FindOneP.h"
@@ -112,7 +112,7 @@ PFParticleTrackAna::~PFParticleTrackAna()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void PFParticleTrackAna::reconfigure(fhicl::ParameterSet const &pset)
-{ 
+{
     m_useModBox = pset.get<bool>("UeModBox",true);
     m_isCheated = pset.get<bool>("IsCheated",false);
     m_trackModuleLabel = pset.get<std::string>("TrackModule","pandora");
@@ -122,9 +122,9 @@ void PFParticleTrackAna::reconfigure(fhicl::ParameterSet const &pset)
 
 void PFParticleTrackAna::beginJob()
 {
-    // 
-    art::ServiceHandle<art::TFileService> tfs;
- 
+    //
+    art::ServiceHandle<art::TFileService const> tfs;
+
     m_pCaloTree = tfs->make<TTree>("calorimetry", "LAr Track Calo Tree");
     m_pCaloTree->Branch("run",            &m_run,            "run/I");
     m_pCaloTree->Branch("event",          &m_event,          "event/I");
@@ -178,7 +178,7 @@ void PFParticleTrackAna::analyze(const art::Event &evt)
     m_pz = 0.0;
 
     std::cout << "  Run: " << m_run << std::endl;
-    std::cout << "  Event: " << m_event << std::endl; 
+    std::cout << "  Event: " << m_event << std::endl;
 
     TrackVector trackVector;
     TracksToHits tracksToHits;
@@ -186,7 +186,7 @@ void PFParticleTrackAna::analyze(const art::Event &evt)
 
     std::cout << "  Tracks: " << trackVector.size() << std::endl;
 
-    // art::ServiceHandle<geo::Geometry> theGeometry;
+    // art::ServiceHandle<geo::Geometry const> theGeometry;
     // auto const* theDetector = lar::providerFrom<detinfo::DetectorPropertiesService>();
 
     ///// microboone_calorimetryalgmc.CalAreaConstants: [ 5.0142e-3, 5.1605e-3, 5.4354e-3 ]
@@ -251,7 +251,7 @@ void PFParticleTrackAna::analyze(const art::Event &evt)
             const double dQdxW(track->DQdxAtPoint(p, geo::kW)); // plane 2
 
             m_plane = ((dQdxU > 0.0) ? geo::kU : (dQdxV > 0.0) ? geo::kV : geo::kW);
- 
+
             const double adc2e(m_isCheated ? adc2eCheat : (geo::kU == m_plane) ? adc2eU : (geo::kV == m_plane) ? adc2eV : adc2eW);
 
             m_dQdx = ((geo::kU == m_plane) ? dQdxU : (geo::kV == m_plane) ? dQdxV : dQdxW);

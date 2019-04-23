@@ -34,7 +34,6 @@ cet_cmake_env()
 cet_set_compiler_flags(DIAGS CAUTIOUS
   WERROR
   NO_UNDEFINED
-  ALLOW_DEPRECATIONS
   EXTRA_FLAGS -pedantic -Wno-unused-local-typedefs
   )
 
@@ -42,6 +41,7 @@ cet_report_compiler_flags()
 
 # these are minimum required versions, not the actual product versions
 find_ups_product( larcoreobj )
+find_ups_product( larcorealg )
 find_ups_product( larcore v1_00_00 )
 find_ups_product( lardataobj )
 find_ups_product( lardataalg )
@@ -51,6 +51,7 @@ find_ups_product( larsim v1_00_00 )
 find_ups_product( larreco v1_00_00 )
 find_ups_product( nutools v0_00_00 )
 find_ups_product( art v1_09_00 )
+find_ups_product(art_root_io)
 find_ups_product( pandora v02_00_00 )
 find_ups_product( larpandoracontent v02_04_00 )
 find_ups_product( cetbuildtools v4_09_00 )
