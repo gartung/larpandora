@@ -579,7 +579,7 @@ void LArPandoraInput::CreatePandoraMCParticles(const Settings &settings, const M
             }
         }
     }
-
+    std::cout << "particleCounter " << particleCounter << std::endl;
     mf::LogDebug("LArPandora") << "Number of mc particles: " << particleCounter << std::endl;
 }
 

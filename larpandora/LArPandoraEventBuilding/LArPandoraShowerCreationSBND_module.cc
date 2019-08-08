@@ -122,7 +122,6 @@ DEFINE_ART_MODULE(LArPandoraShowerCreationSBND)
 #include "lardataobj/RecoBase/Track.h"
 
 #include "lardata/ArtDataHelper/TrackUtils.h"
-
 #include "messagefacility/MessageLogger/MessageLogger.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -138,19 +137,20 @@ namespace lar_pandora
 {
   
   LArPandoraShowerCreationSBND::LArPandoraShowerCreationSBND(fhicl::ParameterSet const &pset) :
-  m_pfParticleLabel(pset.get<std::string>("PFParticleLabel")),
-  m_useAllParticles(pset.get<bool>("UseAllParticles", false)),
-  fShowerEnergyAlg(pset.get<fhicl::ParameterSet>("ShowerEnergyAlg")),
-  fCalorimetryAlg(pset.get<fhicl::ParameterSet>("CalorimetryAlg")),
-  fEMShowerAlg(pset.get<fhicl::ParameterSet>("EMShowerAlg"))
-  {
-    produces< std::vector<recob::Shower> >();
-    produces< std::vector<recob::PCAxis> >();
-    produces< art::Assns<recob::PFParticle, recob::Shower> >();
-    produces< art::Assns<recob::PFParticle, recob::PCAxis> >();
-    produces< art::Assns<recob::Shower, recob::Hit> >();
-    produces< art::Assns<recob::Shower, recob::PCAxis> >();
-}
+    EDProducer{pset},
+    m_pfParticleLabel(pset.get<std::string>("PFParticleLabel")),
+    m_useAllParticles(pset.get<bool>("UseAllParticles", false)),
+    fShowerEnergyAlg(pset.get<fhicl::ParameterSet>("ShowerEnergyAlg")),
+    fCalorimetryAlg(pset.get<fhicl::ParameterSet>("CalorimetryAlg")),
+    fEMShowerAlg(pset.get<fhicl::ParameterSet>("EMShowerAlg"))
+    {
+      produces< std::vector<recob::Shower> >();
+      produces< std::vector<recob::PCAxis> >();
+      produces< art::Assns<recob::PFParticle, recob::Shower> >();
+      produces< art::Assns<recob::PFParticle, recob::PCAxis> >();
+      produces< art::Assns<recob::Shower, recob::Hit> >();
+      produces< art::Assns<recob::Shower, recob::PCAxis> >();
+    }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -193,20 +193,20 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
         }
         else
         {
-            if (m_backtrackerModuleLabel.empty())
-            {
-              throw cet::exception("LArPandora") << "LArPandora::CreatePandoraInput - Can't build MCParticle to Hit map." << std::endl <<
-                  "No SimChannels found with label \"" << m_simChannelModuleLabel << "\", and BackTrackerModuleLabel isn't set in FHiCL." << std::endl;
-            }
-
-            LArPandoraHelper::BuildMCParticleHitMaps(evt, m_hitfinderModuleLabel, m_backtrackerModuleLabel, artHitsToTrackIDEs);
-        }
+	  if (m_backtrackerModuleLabel.empty())
+	    {
+	      throw cet::exception("LArPandora") << "LArPandora::CreatePandoraInput - Can't build MCParticle to Hit map." << std::endl <<
+		"No SimChannels found with label \"" << m_simChannelModuleLabel << "\", and BackTrackerModuleLabel isn't set in FHiCL." << std::endl;
+	    }
+	LArPandoraHelper::BuildMCParticleHitMaps(evt, m_hitfinderModuleLabel, m_backtrackerModuleLabel, artHitsToTrackIDEs);
+	}
     }
 
     LArPandoraInput::CreatePandoraHits2D(m_inputSettings, m_driftVolumeMap, artHits, idToHitMap);
 
     if (m_enableMCParticles && !evt.isRealData())
     {
+
         LArPandoraInput::CreatePandoraMCParticles(m_inputSettings, artMCTruthToMCParticles, artMCParticlesToMCTruth, generatorArtMCParticleVector);
         LArPandoraInput::CreatePandoraMCLinks2D(m_inputSettings, idToHitMap, artHitsToTrackIDEs);
     }

@@ -19,7 +19,7 @@
 
     <algorithm type = "LArMaster">
         <CRSettingsFile>PandoraSettings_Cosmic_Standard.xml</CRSettingsFile>
-        <NuSettingsFile>PandoraSettings_Neutrino_MicroBooNE.xml</NuSettingsFile>
+        <NuSettingsFile>PandoraSettings_Neutrino_Standard.xml</NuSettingsFile>
         <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
         <StitchingTools>
             <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
@@ -29,10 +29,7 @@
             <tool type = "LArCosmicRayTagging"/>
         </CosmicRayTaggingTools>
         <SliceIdTools>
-            <tool type = "LArNeutrinoId">
-                <SvmFileName>PandoraSvm_v03_11_00.xml</SvmFileName>
-                <SvmName>NeutrinoId</SvmName>
-            </tool>
+            <tool type = "LArSimpleNeutrinoId"/>
         </SliceIdTools>
         <InputHitListName>Input</InputHitListName>
         <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
