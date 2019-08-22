@@ -177,7 +177,7 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
 
     LArPandoraHelper::CollectHits(evt, m_hitfinderModuleLabel, artHits);
 
-    if (m_enableMCParticles && !evt.isRealData())
+    if (m_enableMCParticles) // && !evt.isRealData())
     {
         LArPandoraHelper::CollectMCParticles(evt, m_geantModuleLabel, artMCParticleVector);
 
@@ -205,7 +205,7 @@ void LArPandora::CreatePandoraInput(art::Event &evt, IdToHitMap &idToHitMap)
 
     LArPandoraInput::CreatePandoraHits2D(m_inputSettings, m_driftVolumeMap, artHits, idToHitMap);
 
-    if (m_enableMCParticles && !evt.isRealData())
+    if (m_enableMCParticles) // && !evt.isRealData())
     {
         LArPandoraInput::CreatePandoraMCParticles(m_inputSettings, artMCTruthToMCParticles, artMCParticlesToMCTruth, generatorArtMCParticleVector);
         LArPandoraInput::CreatePandoraMCLinks2D(m_inputSettings, idToHitMap, artHitsToTrackIDEs);
