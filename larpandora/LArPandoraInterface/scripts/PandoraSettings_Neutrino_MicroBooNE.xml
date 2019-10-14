@@ -78,23 +78,23 @@
     </algorithm>
 
     <!-- VertexAlgorithms -->
+    <algorithm type = "LArCutClusterCharacterisation">
+        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    </algorithm>
     <algorithm type = "LArCandidateVertexCreation">
         <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
         <OutputVertexListName>CandidateVertices3D</OutputVertexListName>
         <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
         <EnableCrossingCandidates>true</EnableCrossingCandidates>
     </algorithm>
-    <algorithm type = "LArCutClusterCharacterisation">
-        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
-    </algorithm>
     <algorithm type = "LArSvmVertexSelection">
         <InputCaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</InputCaloHitListNames>
         <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
         <OutputVertexListName>NeutrinoVertices3D</OutputVertexListName>
         <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
-        <SvmFileName>PandoraSvm_v03_11_00.xml</SvmFileName>
-        <RegionSvmName>VertexSelectionRegion</RegionSvmName>
-        <VertexSvmName>VertexSelectionVertex</VertexSvmName>
+        <MvaFileName>PandoraSvm_v03_11_00.xml</MvaFileName>
+        <RegionMvaName>VertexSelectionRegion</RegionMvaName>
+        <VertexMvaName>VertexSelectionVertex</VertexMvaName>
         <FeatureTools>
             <tool type = "LArEnergyKickFeature"/>
             <tool type = "LArLocalAsymmetryFeature"/>
