@@ -737,8 +737,8 @@ void LArPandoraHelper::CollectT0s(const art::Event &evt, const std::string &labe
 
 void LArPandoraHelper::CollectSimChannels(const art::Event &evt, const std::string &label, SimChannelVector &simChannelVector, bool &areSimChannelsValid)
 {
-    if (evt.isRealData())
-        throw cet::exception("LArPandora") << " PandoraCollector::CollectSimChannels --- Trying to access MC truth from real data ";
+    //if (evt.isRealData())
+    //    throw cet::exception("LArPandora") << " PandoraCollector::CollectSimChannels --- Trying to access MC truth from real data ";
 
     art::Handle< std::vector<sim::SimChannel> > theSimChannels;
     evt.getByLabel(label, theSimChannels);
@@ -766,8 +766,8 @@ void LArPandoraHelper::CollectSimChannels(const art::Event &evt, const std::stri
 
 void LArPandoraHelper::CollectMCParticles(const art::Event &evt, const std::string &label, MCParticleVector &particleVector)
 {
-    if (evt.isRealData())
-        throw cet::exception("LArPandora") << " PandoraCollector::CollectMCParticles --- Trying to access MC truth from real data ";
+    //if (evt.isRealData())
+    //    throw cet::exception("LArPandora") << " PandoraCollector::CollectMCParticles --- Trying to access MC truth from real data ";
 
     art::Handle< RawMCParticleVector > theParticles;
     evt.getByLabel(label, theParticles);
@@ -793,8 +793,8 @@ void LArPandoraHelper::CollectMCParticles(const art::Event &evt, const std::stri
 
 void LArPandoraHelper::CollectGeneratorMCParticles(const art::Event &evt, const std::string &label, RawMCParticleVector &particleVector)
 {
-    if (evt.isRealData())
-        throw cet::exception("LArPandora") << " PandoraCollector::CollectGeneratorMCParticles --- Trying to access MC truth from real data ";
+    //if (evt.isRealData())
+    //    throw cet::exception("LArPandora") << " PandoraCollector::CollectGeneratorMCParticles --- Trying to access MC truth from real data ";
 
     art::Handle< std::vector<simb::MCTruth> > mcTruthBlocks;
     evt.getByLabel(label, mcTruthBlocks);
